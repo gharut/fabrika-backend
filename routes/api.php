@@ -113,6 +113,16 @@ Route::group([
     Route::put('/services/{service}', [\App\Http\Controllers\Api\ServiceController::class, 'update']);
     Route::middleware('can:list-services')->get('/services/', [\App\Http\Controllers\Api\ServiceController::class, 'list']);
     Route::middleware('can:delete-services')->delete('/services/{service}', [\App\Http\Controllers\Api\ServiceController::class, 'destroy']);
+
+
+
+    Route::post('/clients/', [\App\Http\Controllers\Api\ClientController::class, 'store']);
+    Route::put('/clients/{client}', [\App\Http\Controllers\Api\ClientController::class, 'update']);
+    Route::middleware('can:list-clients')->get('/clients/', [\App\Http\Controllers\Api\ClientController::class, 'list']);
+    Route::middleware('can:delete-clients')->delete('/clients/{client}', [\App\Http\Controllers\Api\ClientController::class, 'destroy']);
+
+
+    Route::get('/attribtes/', [\App\Http\Controllers\Api\AttributesController::class, 'list']);
 });
 
 //Route::post('/register', [AuthController::class, 'register']);
