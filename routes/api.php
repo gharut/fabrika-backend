@@ -122,7 +122,24 @@ Route::group([
     Route::middleware('can:delete-clients')->delete('/clients/{client}', [\App\Http\Controllers\Api\ClientController::class, 'destroy']);
 
 
-    Route::get('/attribtes/', [\App\Http\Controllers\Api\AttributesController::class, 'list']);
+    Route::get('/attributes/', [\App\Http\Controllers\Api\AttributesController::class, 'list']);
+
+    Route::post('/settings/', [\App\Http\Controllers\Api\SettingController::class, 'store']);
+    Route::put('/settings/{setting}', [\App\Http\Controllers\Api\SettingController::class, 'update']);
+    Route::middleware('can:list-settings')->get('/settings/', [\App\Http\Controllers\Api\SettingController::class, 'list']);
+    Route::middleware('can:delete-settings')->delete('/settings/{setting}', [\App\Http\Controllers\Api\SettingController::class, 'destroy']);
+    Route::get('/settings/{setting}', [\App\Http\Controllers\Api\SettingController::class, 'getSettingById']);
+    Route::get('/settings/name/{name}', [\App\Http\Controllers\Api\SettingController::class, 'getSettingByName']);
+    Route::get('/settings/category/{category}', [\App\Http\Controllers\Api\SettingController::class, 'getSettingsByCategory']);
+
+
+    Route::post('/orders/', [\App\Http\Controllers\Api\OrdersController::class, 'store']);
+    Route::put('/orders/{order}/pickup', [\App\Http\Controllers\Api\OrdersController::class, 'updatePickup']);
+    Route::put('/orders/{order}/packaging', [\App\Http\Controllers\Api\OrdersController::class, 'updatePackaging']);
+    Route::put('/orders/{order}/status', [\App\Http\Controllers\Api\OrdersController::class, 'updateStatus']);
+    Route::get('/orders/', [\App\Http\Controllers\Api\OrdersController::class, 'list']);
+    Route::get('/orders/{id}', [\App\Http\Controllers\Api\OrdersController::class, 'getOrder']);
+    Route::get('/orders/calculate/{id}', [\App\Http\Controllers\Api\OrdersController::class, 'calculate']);
 });
 
 //Route::post('/register', [AuthController::class, 'register']);

@@ -11,6 +11,7 @@ use App\Http\Requests\Api\Consumables\ConsumableUpdateRequest;
 use App\Models\Consumable;
 use App\Models\ConsumableHistory;
 use App\Models\Supplier;
+use App\Models\Tag;
 use App\Repositories\Interfaces\ConsumableRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

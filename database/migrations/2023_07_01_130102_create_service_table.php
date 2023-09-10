@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->smallInteger('use_consumable')->default(0);
             $table->enum('step', ['PREPROCESSING', 'PROCESSING', 'FINISHING']);
-            $table->enum('apply_to', ['ORDER', 'PRODUCT', 'PRODUCT_COUNT', 'PRODUCT_UNIT']);
+            $table->enum('apply_to', ['ORDER', 'PRODUCT', 'PRODUCT_COUNT', 'PRODUCT_UNIT', 'CUSTOM_COUNT']);
             $table->smallInteger('multiple_products')->default(0);
             $table->string('count_label')->nullable();
             $table->enum("report_type", ['YN', 'COUNT', 'STEPS']);

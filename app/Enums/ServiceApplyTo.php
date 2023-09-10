@@ -7,4 +7,5 @@ enum ServiceApplyTo: string
     case PRODUCT = "PRODUCT";
     case PRODUCT_COUNT = "PRODUCT_COUNT";
     case PRODUCT_UNIT = "PRODUCT_UNIT";
+    case CUSTOM_COUNT = "CUSTOM_COUNT";
 }
