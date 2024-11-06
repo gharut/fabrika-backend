@@ -33,11 +33,9 @@ class ClientController extends Controller
      */
     public function store(ClientCreateRequest $request): JsonResponse
     {
-
         $client = new Client();
 
-
-        $client->fill($request->only("name", "type", "email", "phone", "details"));
+        $client->fill($request->only("name", "type", "email", "phone", "telegram", "details"));
 
         $saved = $client->save();
 
@@ -45,7 +43,6 @@ class ClientController extends Controller
             'success' => $saved,
             'data' => $saved ? $client : [],
         ]);
-
     }
 
     /**
@@ -53,8 +50,6 @@ class ClientController extends Controller
      */
     public function get(Client $client): JsonResponse
     {
-
-
         return response()->json([
             'success' => true,
             'data' => $client,

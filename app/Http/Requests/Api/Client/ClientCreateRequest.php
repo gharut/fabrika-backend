@@ -37,6 +37,7 @@ class ClientCreateRequest extends FormRequest
             'type' => ['required', new Enum(ClientTypes::class)],
             'phone' => '',
             'email' => '',
+            'telegram' => '',
             'details' => 'sometimes|array',
         ];
     }

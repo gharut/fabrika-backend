@@ -17,6 +17,7 @@ class Client extends Model
         'type',
         'phone',
         'email',
+        'telegram',
         'details'
     ];
 

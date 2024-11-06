@@ -36,6 +36,8 @@ class UserController extends Controller
 
         if($saved) {
             $user->roles()->attach($request->get('role'));
+            $user->load('roles:id,visible_name')->loadCount('roles');
+            $user->role = $user->roles_count ? $user->roles[0] : ['id'=>0, 'visible_name'=>""];
             Password::createToken($user);
         }
         return response()->json([
