@@ -9,6 +9,7 @@ use App\Models\Service;
 use App\Models\ServiceAttribute;
 use App\Models\Tag;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 
 
 class ServiceController extends Controller
@@ -25,7 +26,8 @@ class ServiceController extends Controller
 
     public function list(): JsonResponse
     {
-        $services = Service::all()->load('tags','attributes' );;
+        $services = Service::all()->load('tags','attributes', 'creator', 'updater' );
+        //dd('creator');
 
         return response()->json($services);
     }
@@ -57,6 +59,8 @@ class ServiceController extends Controller
 
         $service = new Service();
         $service->fill($request->only(['name', 'use_consumable', 'step', 'apply_to', 'multiple_products', 'count_label', 'report_type', 'price']));
+        $service->created_by = Auth::id();
+        $service->updated_by = Auth::id();
         $saved = $service->save();
         if($saved) {
             if($request->get('attributes')) {
@@ -75,12 +79,13 @@ class ServiceController extends Controller
 
         return response()->json([
             'success' => $saved,
-            'data' => $saved ? $service->load('tags','attributes') : [],
+            'data' => $saved ? $service->load('tags', 'attributes', 'creator', 'updater') : [],
         ]);
     }
 
     public function update(ServiceUpdateRequest $request, Service $service) {
         $service->fill($request->only(['name', 'use_consumable', 'step', 'apply_to', 'multiple_products', 'count_label', 'report_type', 'price']));
+        $service->updated_by = Auth::id();
         $saved = $service->save();
         if($saved) {
             $service->attributes()->delete();
@@ -100,7 +105,7 @@ class ServiceController extends Controller
 
         return response()->json([
             'success' => $saved,
-            'data' => $saved ? $service->load('tags','attributes') : [],
+            'data' => $saved ? $service->load('tags', 'attributes', 'creator', 'updater') : [],
         ]);
     }
 

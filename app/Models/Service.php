@@ -22,6 +22,8 @@ class Service extends Model
         'count_label',
         'report_type',
         'price',
+        'created_by',
+        'updated_by'
     ];
 
 
@@ -33,5 +35,15 @@ class Service extends Model
     public function attributes(): HasMany
     {
         return $this->HasMany(ServiceAttribute::class, 'service_id', 'id');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updater()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 }
