@@ -76,7 +76,7 @@ class SupplierController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Supplier $supplier): JsonResponse
+    public function update(SupplierUpdateRequest $request, Supplier $supplier): JsonResponse
     {
         $supplier->fill($request->only("name", "address", "website", "contacts", "payments"));
         $saved = $supplier->save();

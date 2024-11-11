@@ -64,11 +64,11 @@ class SupplierCreateRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'required' => 'error_required',
-            'string' => 'error_string',
-            'unique'  => 'error_unique',
-            'exist'  => 'error_exist',
-            'in'  => 'fdfdf',
+            'required' => 'Это поле обязательно для заполнения.',
+            'string' => 'Значение должно быть строкой.',
+            'unique' => 'Это значение уже занято.',
+            'exists' => 'Выбранное значение некорректно.',
+            'in' => 'Выбранное значение недопустимо.',
         ];
     }
 }
