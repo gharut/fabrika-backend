@@ -38,6 +38,14 @@ class ClientCreateRequest extends FormRequest
             'phone' => '',
             'email' => '',
             'telegram' => '',
+            'tin' => '',
+            'psrn' => '',
+            'account' => '',
+            'bank' => '',
+            'correspondent_account' => '',
+            'bic' => '',
+            'legal_address' => '',
+            'vat' => ['nullable', 'numeric', 'between:0,100', 'regex:/^\d+(\.\d{1,2})?$/'],
             'details' => 'sometimes|array',
         ];
     }

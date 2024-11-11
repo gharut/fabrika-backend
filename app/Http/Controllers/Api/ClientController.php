@@ -35,7 +35,22 @@ class ClientController extends Controller
     {
         $client = new Client();
 
-        $client->fill($request->only("name", "type", "email", "phone", "telegram", "details"));
+        $client->fill($request->only(
+            'name',
+            'type',
+            'email',
+            'phone',
+            'telegram',
+            'details',
+            'tin',
+            'psrn',
+            'account',
+            'bank',
+            'correspondent_account',
+            'bic',
+            'legal_address',
+            'vat'
+        ));
 
         $saved = $client->save();
 

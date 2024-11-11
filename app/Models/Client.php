@@ -5,8 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasTimestamps;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Client extends Model
 {
@@ -18,7 +18,15 @@ class Client extends Model
         'phone',
         'email',
         'telegram',
-        'details'
+        'details',
+        'tin',
+        'psrn',
+        'account',
+        'bank',
+        'correspondent_account',
+        'bic',
+        'legal_address',
+        'vat'
     ];
 
     protected $casts = [
