@@ -22,6 +22,7 @@ class Service extends Model
         'count_label',
         'report_type',
         'price',
+        'sort',
         'created_by',
         'updated_by'
     ];

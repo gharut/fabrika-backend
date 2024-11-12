@@ -26,8 +26,10 @@ class ServiceController extends Controller
 
     public function list(): JsonResponse
     {
-        $services = Service::all()->load('tags','attributes', 'creator', 'updater' );
-        //dd('creator');
+        $services = Service::query()
+            ->with('tags', 'attributes', 'creator', 'updater')
+            ->orderBy('sort')
+            ->get();
 
         return response()->json($services);
     }
@@ -58,7 +60,7 @@ class ServiceController extends Controller
     {
 
         $service = new Service();
-        $service->fill($request->only(['name', 'use_consumable', 'step', 'apply_to', 'multiple_products', 'count_label', 'report_type', 'price']));
+        $service->fill($request->only(['name', 'use_consumable', 'step', 'apply_to', 'multiple_products', 'count_label', 'report_type', 'price','sort']));
         $service->created_by = Auth::id();
         $service->updated_by = Auth::id();
         $saved = $service->save();
@@ -84,7 +86,7 @@ class ServiceController extends Controller
     }
 
     public function update(ServiceUpdateRequest $request, Service $service) {
-        $service->fill($request->only(['name', 'use_consumable', 'step', 'apply_to', 'multiple_products', 'count_label', 'report_type', 'price']));
+        $service->fill($request->only(['name', 'use_consumable', 'step', 'apply_to', 'multiple_products', 'count_label', 'report_type', 'price', 'sort']));
         $service->updated_by = Auth::id();
         $saved = $service->save();
         if($saved) {
