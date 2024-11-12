@@ -21,8 +21,6 @@ return new class extends Migration
             $table->string('count_label')->nullable();
             $table->enum("report_type", ['YN', 'COUNT', 'STEPS']);
             $table->float('price');
-            $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
-            $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('set null');
 
             $table->timestamps();
             $table->softDeletes();
