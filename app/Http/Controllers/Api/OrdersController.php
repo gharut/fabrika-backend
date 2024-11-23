@@ -270,8 +270,6 @@ class OrdersController extends Controller
                     $newChild->save();
                 }
 
-
-
                 foreach ($product['services'] as $svc) {
                     if($svc['record_id'] != null) {
                         $service = OrderService::where('id' , '=' , $svc['record_id'] )->first();
@@ -285,7 +283,7 @@ class OrdersController extends Controller
                         if($svc['service_enabled']) {
                             $service = new OrderService();
                             $service->order_id = $order->id;
-                            $service->product_id = $prd['product_id'];
+                            $service->product_id = $prd->id;
                             $service->service_id = $svc['service_id'];
                             $service->service_attribute = $svc['service_attribute'];
                             $service->save();
