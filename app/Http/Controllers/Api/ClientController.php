@@ -76,20 +76,29 @@ class ClientController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Supplier $supplier): JsonResponse
+    public function update(Request $request, Client $client): JsonResponse
     {
-        $supplier->fill($request->only("name", "address", "website", "contacts", "payments"));
-        $saved = $supplier->save();
-        $supplier->tags()->detach();
+        $client->fill($request->only('name',
+            'type',
+            'email',
+            'phone',
+            'telegram',
+            'details',
+            'tin',
+            'psrn',
+            'account',
+            'bank',
+            'correspondent_account',
+            'bic',
+            'legal_address',
+            'vat'
+        ));
 
-        $tags = $request->get("tags");
-        if ($tags) {
-            $supplier->tags()->attach($request->get('tags'));
-        }
+        $saved = $client->save();
 
         return response()->json([
             'success' => $saved,
-            'data' => $saved ? $supplier->load('tags:id,name') : []
+            'data' => $saved
         ]);
     }
 
