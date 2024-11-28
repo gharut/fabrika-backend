@@ -358,8 +358,8 @@ class OrdersController extends Controller
         ]);
     }
 
-    private function getOrderCalculation($order_id) {
-        $order = Order::with(['products', 'order_services'])->find($order_id);
+    private function getOrderCalculation(string $order_uuid) {
+        $order = Order::with(['products', 'order_services'])->where('uuid', $order_uuid)->firstOrFail();
         $calc = new OrderCalculator($order);
 
         return $calc->getResult();

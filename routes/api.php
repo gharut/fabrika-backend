@@ -111,7 +111,7 @@ Route::group([
 
     Route::post('/services/', [\App\Http\Controllers\Api\ServiceController::class, 'store']);
     Route::put('/services/{service}', [\App\Http\Controllers\Api\ServiceController::class, 'update']);
-    Route::middleware('can:list-services')->get('/services/', [\App\Http\Controllers\Api\ServiceController::class, 'list']);
+    // Route::middleware('can:list-services')->get('/services/', [\App\Http\Controllers\Api\ServiceController::class, 'list']);
     Route::middleware('can:delete-services')->delete('/services/{service}', [\App\Http\Controllers\Api\ServiceController::class, 'destroy']);
 
 
@@ -139,7 +139,11 @@ Route::group([
     Route::put('/orders/{order}/status', [\App\Http\Controllers\Api\OrdersController::class, 'updateStatus']);
     Route::get('/orders/', [\App\Http\Controllers\Api\OrdersController::class, 'list']);
     Route::get('/orders/{id}', [\App\Http\Controllers\Api\OrdersController::class, 'getOrder']);
-    Route::get('/orders/calculate/{id}', [\App\Http\Controllers\Api\OrdersController::class, 'calculate']);
 });
 
-//Route::post('/register', [AuthController::class, 'register']);
+Route::group([
+    'namespace' => 'App\Http\Controllers\Api',
+], function() {
+    Route::get('/services/', [\App\Http\Controllers\Api\ServiceController::class, 'list']); // TODO: Move in auth group
+    Route::get('/orders/calculate/{id}', [\App\Http\Controllers\Api\OrdersController::class, 'calculate']);
+});

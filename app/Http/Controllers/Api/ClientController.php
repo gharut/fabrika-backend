@@ -98,7 +98,7 @@ class ClientController extends Controller
 
         return response()->json([
             'success' => $saved,
-            'data' => $saved
+            'data' => $client
         ]);
     }
 
