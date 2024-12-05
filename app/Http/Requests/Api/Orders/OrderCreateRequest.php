@@ -35,7 +35,6 @@ class OrderCreateRequest extends FormRequest
             'pickup.supply_date' => 'required',
             'pickup.supply_time' => 'required',
 
-
             'pickup.products' => 'required|array',
             'pickup.products.*.name' => 'required',
             'pickup.products.*.color' => 'required',
@@ -49,14 +48,13 @@ class OrderCreateRequest extends FormRequest
             'pickup.products.*.child.*.size.*.size' => 'sometimes',
             'pickup.products.*.child.*.size.*.qty' => 'required|numeric',
 
-
-            'pickup.supply_items' => 'sometimes|required',
-            'pickup.supply_items.*.qty' => 'required',
-            'pickup.supply_items.*.width' => 'required',
-            'pickup.supply_items.*.length' => 'required',
-            'pickup.supply_items.*.height' => 'required',
-            'pickup.supply_items.*.unit' => 'required',
-            'pickup.supply_items.*.weight' => 'required',
+            'pickup.supply_items' => 'nullable|array', // Разрешаем пустой массив или отсутствие
+            'pickup.supply_items.*.qty' => 'nullable|sometimes|required',
+            'pickup.supply_items.*.width' => 'nullable|sometimes|required',
+            'pickup.supply_items.*.length' => 'nullable|sometimes|required',
+            'pickup.supply_items.*.height' => 'nullable|sometimes|required',
+            'pickup.supply_items.*.unit' => 'nullable|sometimes|required',
+            'pickup.supply_items.*.weight' => 'nullable|sometimes|required',
 
             'pickup.services' => 'required|array',
             'pickup.services.*.service_id' => 'required',
@@ -70,7 +68,6 @@ class OrderCreateRequest extends FormRequest
             'packaging.*.services.*.service_id' => 'required',
             'packaging.*.services.*.service_enabled' => 'required|boolean',
             'packaging.*.services.*.service_attribute' => '',
-
         ];
     }
 

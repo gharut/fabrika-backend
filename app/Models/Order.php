@@ -8,11 +8,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class Order extends Model
 {
-    use HasFactory, SoftDeletes, HasTimestamps, HasUuids;
+    use HasFactory, SoftDeletes, HasTimestamps;
+
+    protected static function booted()
+    {
+        static::creating(function ($order) {
+            if (!$order->uuid) {
+                $order->uuid = (string) \Str::uuid();
+            }
+        });
+    }
+
     protected $hidden = ['pivot'];
     protected $fillable = [
         'client_id',

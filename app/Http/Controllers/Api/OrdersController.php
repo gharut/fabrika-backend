@@ -204,8 +204,6 @@ class OrdersController extends Controller
                 }
             }
 
-//            echo count($products);
-//            print_r($order->products->toJSON());
             foreach ($order->products as $prd) {
 
                 if($prd->parent_id != null) {
