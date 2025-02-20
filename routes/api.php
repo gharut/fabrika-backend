@@ -139,6 +139,12 @@ Route::group([
     Route::put('/orders/{order}/status', [\App\Http\Controllers\Api\OrdersController::class, 'updateStatus']);
     Route::get('/orders/', [\App\Http\Controllers\Api\OrdersController::class, 'list']);
     Route::get('/orders/{id}', [\App\Http\Controllers\Api\OrdersController::class, 'getOrder']);
+
+    Route::get('/warehouses/', [\App\Http\Controllers\Api\WarehouseController::class, 'index']);
+    Route::get('/warehouses/get-selections', [\App\Http\Controllers\Api\WarehouseController::class, 'getSelections']);
+    Route::post('/warehouses/', [\App\Http\Controllers\Api\WarehouseController::class, 'store']);
+    Route::put('/warehouses/{id}', [\App\Http\Controllers\Api\WarehouseController::class, 'update']);
+    Route::delete('/warehouses/{id}', [\App\Http\Controllers\Api\WarehouseController::class, 'destroy']);
 });
 
 Route::group([
