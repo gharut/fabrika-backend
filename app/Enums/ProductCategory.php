@@ -1,0 +1,19 @@
+<?php
+namespace App\Enums;
+
+enum ProductCategory: string
+{
+    case COMMON = 'COMMON';
+    case COSMETICS_AND_HOUSEHOLD_CHEMICALS = 'COSMETICS_AND_HOUSEHOLD_CHEMICALS';
+    case CLOTHES = 'CLOTHES';
+    case FOOTWEAR = 'FOOTWEAR';
+    case BOOKS = 'BOOKS';
+    case TEXTILE_AND_ACCESSORIES = 'TEXTILE_AND_ACCESSORIES';
+    case LEATHER = 'LEATHER';
+    case DISHES = 'DISHES';
+    case GLASSES = 'GLASSES';
+    case PRODUCTS_FOR_ADULTS = 'PRODUCTS_FOR_ADULTS';
+    case SOIL = 'SOIL';
+    case JEWELRY = 'JEWELRY';
+    case FOOD_AND_PET_SUPPLIES = 'FOOD_AND_PET_SUPPLIES';
+}

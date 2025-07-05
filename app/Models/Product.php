@@ -15,6 +15,8 @@ class Product extends Model
     use HasFactory, SoftDeletes, HasTimestamps;
     protected $hidden = ['pivot'];
     protected $fillable = [
+        'client_id',
+        'order_id',
         'name',
         'parent_id',
         'qty',

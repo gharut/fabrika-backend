@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\ImportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -117,6 +118,7 @@ Route::group([
 
 
     Route::post('/clients/', [\App\Http\Controllers\Api\ClientController::class, 'store']);
+    Route::get('/clients/{client}', [\App\Http\Controllers\Api\ClientController::class, 'get']);
     Route::put('/clients/{client}', [\App\Http\Controllers\Api\ClientController::class, 'update']);
     Route::middleware('can:list-clients')->get('/clients/', [\App\Http\Controllers\Api\ClientController::class, 'list']);
     Route::middleware('can:delete-clients')->delete('/clients/{client}', [\App\Http\Controllers\Api\ClientController::class, 'destroy']);
@@ -145,6 +147,28 @@ Route::group([
     Route::post('/warehouses/', [\App\Http\Controllers\Api\WarehouseController::class, 'store']);
     Route::put('/warehouses/{id}', [\App\Http\Controllers\Api\WarehouseController::class, 'update']);
     Route::delete('/warehouses/{id}', [\App\Http\Controllers\Api\WarehouseController::class, 'destroy']);
+    
+    Route::get('printers', [\App\Http\Controllers\Api\PrinterController::class, 'index']);
+    Route::post('printers', [\App\Http\Controllers\Api\PrinterController::class, 'store']);
+    Route::get('printers/{printer}', [\App\Http\Controllers\Api\PrinterController::class, 'show']);
+    Route::put('printers/{printer}', [\App\Http\Controllers\Api\PrinterController::class, 'update']);
+    Route::delete('printers/{printer}', [\App\Http\Controllers\Api\PrinterController::class, 'destroy']);
+    Route::post('printers/{printer}/sync-count', [\App\Http\Controllers\Api\PrinterController::class, 'syncCount']);
+
+    Route::get   ('labels', [\App\Http\Controllers\Api\LabelController::class, 'index']);
+    Route::post  ('labels', [\App\Http\Controllers\Api\LabelController::class, 'store']);
+    Route::get   ('labels/{label}', [\App\Http\Controllers\Api\LabelController::class, 'show']);
+    Route::put   ('labels/{label}', [\App\Http\Controllers\Api\LabelController::class, 'update']);
+    Route::delete('labels/{label}', [\App\Http\Controllers\Api\LabelController::class, 'destroy']);
+
+    Route::apiResource('products', \App\Http\Controllers\Api\ProductController::class);
+    Route::apiResource('product-sizes', \App\Http\Controllers\Api\ProductSizeController::class);
+
+    Route::get('chestny-znak-labels', [App\Http\Controllers\Api\ChestnyZnakLabelController::class, 'index']);
+    Route::post('chestny-znak-labels/import', [App\Http\Controllers\Api\ChestnyZnakLabelController::class, 'import']);
+    Route::post('chestny-znak-labels/download-pdf', [\App\Http\Controllers\Api\ChestnyZnakLabelController::class,'downloadPdfLabels']);
+    Route::post('chestny-znak-labels/defective', [App\Http\Controllers\Api\ChestnyZnakLabelController::class, 'markAsUnused']);
+    Route::post('chestny-znak-labels/replace-size', [App\Http\Controllers\Api\ChestnyZnakLabelController::class, 'replaceSize']);
 });
 
 Route::group([

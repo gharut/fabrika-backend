@@ -1,0 +1,58 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\ProductSize;
+use Illuminate\Pagination\LengthAwarePaginator;
+
+class ProductSizeService
+{
+    public function getAll(?int $productId, int $perPage = 15): LengthAwarePaginator
+    {
+        $query = ProductSize::with(['product'])
+            ->withCount(['chestnyZnakLabels as available_labels_count' => function($q) {
+                $q->where('used', false);
+            }]);
+
+        if ($productId !== null) {
+            $query->where('product_id', $productId);
+        }
+
+        return $query->paginate($perPage);
+    }
+
+    public function getOne(int $id): ProductSize
+    {
+        return ProductSize::with(['product'])
+            ->withCount(['chestnyZnakLabels as available_labels_count' => function($q) {
+                $q->where('used', false);
+            }])
+            ->findOrFail($id);
+    }
+
+    public function create(array $data): ProductSize
+    {
+        // $data['created_by'] = auth()->id();
+        // $data['updated_by'] = auth()->id();
+        $data['created_by'] = 1;
+        $data['updated_by'] = 1;
+
+        return ProductSize::create($data);
+    }
+
+    public function update(int $id, array $data): ProductSize
+    {
+        $size = ProductSize::findOrFail($id);
+        // $data['updated_by'] = auth()->id();
+        $data['updated_by'] = 1;
+
+        $size->fill($data)->save();
+        return $size;
+    }
+
+    public function delete(int $id): void
+    {
+        $size = ProductSize::findOrFail($id);
+        $size->delete();
+    }
+}
