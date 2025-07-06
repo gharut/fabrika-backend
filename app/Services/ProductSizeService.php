@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ProductSize;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
 
 class ProductSizeService
 {
@@ -32,10 +33,8 @@ class ProductSizeService
 
     public function create(array $data): ProductSize
     {
-        // $data['created_by'] = auth()->id();
-        // $data['updated_by'] = auth()->id();
-        $data['created_by'] = 1;
-        $data['updated_by'] = 1;
+        $data['created_by'] = Auth::id();
+        $data['updated_by'] = Auth::id();
 
         return ProductSize::create($data);
     }
@@ -43,8 +42,7 @@ class ProductSizeService
     public function update(int $id, array $data): ProductSize
     {
         $size = ProductSize::findOrFail($id);
-        // $data['updated_by'] = auth()->id();
-        $data['updated_by'] = 1;
+        $data['updated_by'] = Auth::id();
 
         $size->fill($data)->save();
         return $size;

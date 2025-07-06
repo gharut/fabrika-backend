@@ -14,7 +14,7 @@ class ProductSizeCreateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'product_id' => ['required', 'exists:products,id'],
+            'product_id' => ['required', 'exists:wb_products,id'],
             'value' => ['required', 'string', 'max:255'],
             'barcode' => ['required', 'string', 'max:255'],
         ];

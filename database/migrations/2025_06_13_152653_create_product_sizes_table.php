@@ -13,11 +13,10 @@ return new class extends Migration
     {
         Schema::create('product_sizes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('product_id')->constrained("products")->cascadeOnDelete();
+            $table->foreignId('product_id')->constrained("wb_products")->cascadeOnDelete();
             $table->string('value');
             $table->string('barcode');
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 

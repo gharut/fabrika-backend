@@ -16,7 +16,7 @@ class ProductSizeController extends Controller
     public function index(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'product_id' => 'sometimes|integer|exists:products,id',
+            'product_id' => 'sometimes|integer|exists:wb_products,id',
             'per_page'   => 'sometimes|integer|min:1',
         ]);
 

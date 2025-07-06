@@ -6,6 +6,7 @@ use App\Models\ChestnyZnakLabel;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
@@ -55,10 +56,8 @@ class ChestnyZnakLabelService
 
         $validated = Validator::make($data, $rules)->validate();
 
-        // $validated['created_by'] = auth()->id();
-        $validated['created_by'] = 1;
-        // $validated['updated_by'] = auth()->id();
-        $validated['updated_by'] = 1;
+        $validated['created_by'] = Auth::id();
+        $validated['updated_by'] = Auth::id();
 
         return ChestnyZnakLabel::create($validated);
     }
@@ -81,8 +80,7 @@ class ChestnyZnakLabelService
         $label->used = true;
         $label->used_by = $userId;
         $label->used_at = Carbon::now();
-        // $label->updated_by = auth()->id();
-        $label->updated_by = 1;
+        $label->updated_by = Auth::id();
         $label->save();
 
         return $label;
@@ -155,69 +153,6 @@ class ChestnyZnakLabelService
         return $calc === $check;
     }
 
-    public function generatePdf(int $sizeId, int $quantity): Response
-    {
-        // 1) забираем N неиспользованных
-        $labels = $this->getUnused($sizeId, $quantity);
-        if ($labels->count() < $quantity) {
-            abort(422, 'Недостаточно неиспользованных меток');
-        }
-
-        // 2) помечаем их как использованные
-        // $userId = auth()->id();
-        $userId = 1;
-        foreach ($labels as $label) {
-            $this->markAsUsed($label->id, $userId);
-        }
-
-        $pageW = 58;
-        $pageH = 40;
-        $pdf = new TCPDF('L', 'mm', [$pageW, $pageH], true, 'UTF-8', false);
-        $pdf->SetPrintHeader(false);
-        $pdf->SetPrintFooter(false);
-        $pdf->SetAutoPageBreak(false);
-
-        foreach ($labels as $label) {
-            $pdf->AddPage();
-
-            $margin = 0;
-            $dmW = $pageW - $margin*2;
-            $dmH = $pageH - 12;
-
-            $style = [
-                'border'  => 0,
-                'padding' => 0,
-                'fgcolor' => [0,0,0],
-                'bgcolor' => [255,255,255],
-            ];
-
-            $pdf->write2DBarcode(
-                $label->code,
-                'DATAMATRIX',
-                $margin,
-                $margin,
-                $dmW,
-                $dmH,
-                $style,
-                'N'
-            );
-
-            $pdf->SetFont('helvetica', '', 8);
-            $pdf->SetXY(0, $pageH - 8);
-            $gtin14 = substr($label->code, 0, 14);
-            $pdf->Cell($pageW, 6, $gtin14, 0, 0, 'C');
-        }
-
-        return response(
-            $pdf->Output('', 'S'),
-            200,
-            [
-                'Content-Type'        => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="labels.pdf"',
-            ]
-        );
-    }
-
     public function getUnused(int $sizeId, int $quantity)
     {
         return ChestnyZnakLabel::where('size_id', $sizeId)
@@ -230,7 +165,6 @@ class ChestnyZnakLabelService
     public function replaceSize(int $quantity, int $oldSizeId, int $newSizeId): int
     {
         return DB::transaction(function () use ($quantity, $oldSizeId, $newSizeId) {
-            // Считаем доступные (неиспользованные) метки
             $available = ChestnyZnakLabel::where('size_id', $oldSizeId)
                 ->where('used', false)
                 ->count();
@@ -241,7 +175,6 @@ class ChestnyZnakLabelService
                 ]);
             }
 
-            // Берём ID первых $quantity меток (обычно по created_at или id)
             $ids = ChestnyZnakLabel::where('size_id', $oldSizeId)
                 ->where('used', false)
                 ->orderBy('created_at', 'asc')
@@ -249,7 +182,6 @@ class ChestnyZnakLabelService
                 ->pluck('id')
                 ->all();
 
-            // Обновляем размер
             $updated = ChestnyZnakLabel::whereIn('id', $ids)
                 ->update(['size_id' => $newSizeId]);
 

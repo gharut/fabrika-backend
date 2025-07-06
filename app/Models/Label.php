@@ -5,22 +5,16 @@ namespace App\Models;
 use App\Enums\ProductCategory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Label extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
     protected $table = 'labels';
 
     protected $fillable = [
         'name',
         'product_id',
-        'client_id',
-        'article',
-        'composition',
-        'color',
         'has_chestny_znak',
-        'category',
         'created_by',
         'updated_by',
     ];
@@ -35,7 +29,7 @@ class Label extends Model
 
     public function product()
     {
-        return $this->belongsTo(Product::class, 'product_id');
+        return $this->belongsTo(WbProduct::class, 'product_id');
     }
 
     public function client()

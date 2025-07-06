@@ -4,12 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\ChestnyZnakLabel;
 
 class ProductSize extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
     protected $table = 'product_sizes';
 
     protected $fillable = [
@@ -26,7 +25,7 @@ class ProductSize extends Model
 
     public function product()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(WbProduct::class);
     }
 
     public function chestnyZnakLabels()

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Printer;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class PrinterService
 {
@@ -22,10 +23,8 @@ class PrinterService
     public function create(array $data): Printer
     {
         $data = array_merge($data, [
-            // 'created_by' => auth()->id(),
-            'created_by' => 1,
-            // 'updated_by' => auth()->id(),
-            'updated_by' => 1,
+            'created_by' => Auth::id(),
+            'updated_by' => Auth::id(),
         ]);
 
         return Printer::create($data);
@@ -34,7 +33,7 @@ class PrinterService
     public function update(int $id, array $data): Printer
     {
         $printer = Printer::findOrFail($id);
-        $data['updated_by'] = 1;
+        $data['updated_by'] = Auth::id();
 
         $printer->fill($data)->save();
         return $printer;

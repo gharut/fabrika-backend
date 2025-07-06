@@ -4,6 +4,7 @@ namespace App\Services;
 use App\Models\Label;
 use Illuminate\Pagination\LengthAwarePaginator;
 use InvalidArgumentException;
+use Illuminate\Support\Facades\Auth;
 
 class LabelService
 {
@@ -21,8 +22,8 @@ class LabelService
 
     public function create(array $data): Label
     {
-        $data['created_by'] = 1;
-        $data['updated_by'] = 1;
+        $data['created_by'] = Auth::id();
+        $data['updated_by'] = Auth::id();
 
         return Label::create($data);
     }
@@ -30,7 +31,7 @@ class LabelService
     public function update(int $id, array $data): Label
     {
         $label = Label::findOrFail($id);
-        $data['updated_by'] = 1;
+        $data['updated_by'] = Auth::id();
 
         $label->fill($data)->save();
         return $label;

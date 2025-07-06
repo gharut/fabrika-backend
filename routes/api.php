@@ -161,7 +161,7 @@ Route::group([
     Route::put   ('labels/{label}', [\App\Http\Controllers\Api\LabelController::class, 'update']);
     Route::delete('labels/{label}', [\App\Http\Controllers\Api\LabelController::class, 'destroy']);
 
-    Route::apiResource('products', \App\Http\Controllers\Api\ProductController::class);
+    Route::apiResource('wb-products', \App\Http\Controllers\Api\WbProductController::class);
     Route::apiResource('product-sizes', \App\Http\Controllers\Api\ProductSizeController::class);
 
     Route::get('chestny-znak-labels', [App\Http\Controllers\Api\ChestnyZnakLabelController::class, 'index']);

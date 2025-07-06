@@ -14,7 +14,7 @@ class ProductSizeUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'product_id' => ['sometimes', 'exists:products,id'],
+            'product_id' => ['sometimes', 'exists:wb_products,id'],
             'value' => ['sometimes', 'string', 'max:255'],
             'barcode' => ['sometimes', 'string', 'max:255'],
         ];

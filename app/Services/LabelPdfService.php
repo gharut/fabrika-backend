@@ -31,6 +31,7 @@ class LabelPdfService
         }
 
         $label = $this->labelService->getOne($options->labelId);
+        $product = $label->product;
         $gen2D = new DNS2D();
         $gen1D = new DNS1D();
         $labels = collect();
@@ -43,7 +44,7 @@ class LabelPdfService
                 $this->CHZLabelService->markAsUsed($item->id, $userId);
 
                 $item->name = $label->name;
-                $item->color = $label->color;
+                $item->color = $product->color;
                 $item->size = $item->size->value;
                 $item->packerId = $userId;
                 $item->id = $item->id;
@@ -55,9 +56,9 @@ class LabelPdfService
                 $item->barcode2D = $gen2D->getBarcodePNG($code, 'DATAMATRIX', 2, 2);
                 if ($includeSHK) {
                     $item->barcode1D = $gen1D->getBarcodePNG('4445645656', 'C128', 1, 35);
-                    $item->article   = $label->article;
-                    $item->client  = $label->client->name;
-                    $item->composition  = $label->composition;
+                    $item->article   = $product->article;
+                    $item->client  = $product->client->name;
+                    $item->composition  = $product->composition;
                 }
 
                 // логотип
@@ -72,10 +73,10 @@ class LabelPdfService
             for ($i = 0; $i < $quantity; $i++) {
                 $item = new \stdClass();
                 $item->name   = $label->name;
-                $item->article   = $label->article;
-                $item->client  = $label->client->name;
-                $item->composition  = $label->composition;
-                $item->color  = $label->color;
+                $item->article   = $product->article;
+                $item->client  = $product->client->name;
+                $item->composition  = $product->composition;
+                $item->color  = $product->color;
                 $item->size   = $size->value;
 
                 // штрихкод
