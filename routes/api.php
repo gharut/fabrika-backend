@@ -177,3 +177,7 @@ Route::group([
     Route::get('/services/', [\App\Http\Controllers\Api\ServiceController::class, 'list']); // TODO: Move in auth group
     Route::get('/orders/calculate/{id}', [\App\Http\Controllers\Api\OrdersController::class, 'calculate']);
 });
+
+Route::options('/{any}', function () {
+    return response()->json([], 204);
+})->where('any', '.*');
