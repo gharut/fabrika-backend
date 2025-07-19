@@ -14,7 +14,6 @@ class LabelUpdateRequest extends FormRequest
         return [
             'name'             => ['required', 'string', 'max:255'],
             'product_id'       => ['sometimes','integer','exists:wb_products,id'],
-            'has_chestny_znak' => ['sometimes','boolean'],
         ];
     }
 }

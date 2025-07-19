@@ -15,8 +15,7 @@ return new class extends Migration
         Schema::create('labels', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')->nullable()->constrained('wb_products')->nullOnDelete();
-            $table->string('name');
-            $table->boolean('has_chestny_znak')->default(false);
+            $table->string('name');            
             $table->bigInteger('created_by')->constrained('users')->nullOnDelete();
             $table->bigInteger('updated_by')->constrained('users')->nullOnDelete();
             $table->timestamps();

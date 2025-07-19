@@ -55,7 +55,7 @@ class LabelPdfService
 
                 $item->barcode2D = $gen2D->getBarcodePNG($code, 'DATAMATRIX', 2, 2);
                 if ($includeSHK) {
-                    $item->barcode1D = $gen1D->getBarcodePNG('4445645656', 'C128', 1, 35);
+                    $item->barcode1D = $gen1D->getBarcodePNG($product->article, 'C128', 1, 35);
                     $item->article   = $product->article;
                     $item->client  = $product->client->name;
                     $item->composition  = $product->composition;
@@ -80,7 +80,7 @@ class LabelPdfService
                 $item->size   = $size->value;
 
                 // штрихкод
-                $item->barcode1D = $gen1D->getBarcodePNG('4445645656', 'C128', 1, 35);
+                $item->barcode1D = $gen1D->getBarcodePNG($product->article, 'C128', 1, 35);
 
                 // логотип (если нужен)
                 $logoPath     = public_path('images/cz-logo.png');

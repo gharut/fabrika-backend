@@ -44,6 +44,7 @@ class WbProductController extends Controller
             'color'      => 'nullable|string|max:100',
             'composito'      => 'nullable|string|max:100',
             'client_id'  => 'required|exists:clients,id',
+            'has_chestny_znak' => ['required','boolean'],
             'article'          => 'required|string|max:255',
             'composition'      => 'required|string',
             'color'            => 'required|string|max:100',
@@ -61,6 +62,7 @@ class WbProductController extends Controller
             'client_id'  => 'required|exists:clients,id',
             'article'          => 'sometimes|string|max:255',
             'composition'      => 'sometimes|string',
+            'has_chestny_znak' => ['sometimes','boolean'],
             'color'            => 'sometimes|string|max:100',
             'category'         => ['sometimes', Rule::in(array_map(fn($c) => $c->value, ProductCategory::cases()))],
         ]);

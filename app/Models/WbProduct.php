@@ -16,12 +16,14 @@ class WbProduct extends Model
         'color',
         'article',
         'composition',
+        'has_chestny_znak',
         'category',
         'created_by',
         'updated_by',
     ];
 
     protected $casts = [
+        'has_chestny_znak' => 'boolean',
         'category' => ProductCategory::class,
     ];
 

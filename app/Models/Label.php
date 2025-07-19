@@ -14,13 +14,11 @@ class Label extends Model
     protected $fillable = [
         'name',
         'product_id',
-        'has_chestny_znak',
         'created_by',
         'updated_by',
     ];
 
     protected $casts = [
-        'has_chestny_znak' => 'boolean',
         'deleted_at'       => 'datetime',
         'created_at'       => 'datetime',
         'updated_at'       => 'datetime',

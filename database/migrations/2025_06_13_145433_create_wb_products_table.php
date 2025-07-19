@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('color')->nullable();
             $table->string('article');
             $table->string('composition')->nullable();
+            $table->boolean('has_chestny_znak')->default(false);
             
             $table->foreignId('created_by')->constrained('users')->onDelete('restrict');
             $table->foreignId('updated_by')->constrained('users')->onDelete('restrict');

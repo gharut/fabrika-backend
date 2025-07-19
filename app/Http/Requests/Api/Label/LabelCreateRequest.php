@@ -14,7 +14,6 @@ class LabelCreateRequest extends FormRequest
         return [
             'name'             => ['required', 'string', 'max:255'],
             'product_id'       => ['required','integer','exists:wb_products,id'],
-            'has_chestny_znak' => ['required','boolean'],
         ];
     }
 }
