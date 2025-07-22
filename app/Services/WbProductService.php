@@ -8,12 +8,16 @@ use Illuminate\Support\Facades\Auth;
 
 class WbProductService
 {
-    public function getAll(?int $clientId = null, ?string $name = null): Collection
+    public function getAll(?int $clientId = null, ?int $productId = null, ?string $name = null): Collection
     {
         $query = WbProduct::with(['client']);
 
         if ($clientId !== null) {
             $query->where('client_id', $clientId);
+        }
+
+        if ($productId !== null) {
+            $query->where('id', '!=', $productId);
         }
 
         if (!empty($name)) {

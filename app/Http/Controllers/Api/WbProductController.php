@@ -24,9 +24,12 @@ class WbProductController extends Controller
         $clientIdParam = $request->query('client_id');
         $clientId = is_numeric($clientIdParam) ? (int)$clientIdParam : null;
 
+        $productIdParam = $request->query('product_id');
+        $productId = is_numeric($productIdParam) ? (int)$productIdParam : null;
+
         $name = $request->query('name');
 
-        $wbProducts = $this->service->getAll($clientId, $name);
+        $wbProducts = $this->service->getAll($clientId, $productId, $name);
 
         return response()->json($wbProducts);
     }
