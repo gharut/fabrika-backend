@@ -8,11 +8,20 @@ use Illuminate\Support\Facades\Auth;
 
 class LabelService
 {
-    public function getAll(int $perPage = 15): LengthAwarePaginator
+    public function getAll(?int $clientId = null, ?string $name = null, int $perPage = 15): LengthAwarePaginator
     {
-        return Label::with(['product','client','creator','editor'])
-                    ->paginate($perPage);
+        return Label::with(['product', 'client'])
+            ->when($clientId, function ($query) use ($clientId) {
+                $query->whereHas('product', function ($q) use ($clientId) {
+                    $q->where('client_id', $clientId);
+                });
+            })
+            ->when($name, function ($query) use ($name) {
+                $query->where('name', 'like', '%' . $name . '%');
+            })
+            ->paginate($perPage);
     }
+
 
     public function getOne(int $id): Label
     {

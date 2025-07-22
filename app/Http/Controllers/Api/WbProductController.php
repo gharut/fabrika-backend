@@ -42,11 +42,10 @@ class WbProductController extends Controller
         $data = $this->validate($request, [
             'name'       => 'required|string|max:255',
             'color'      => 'nullable|string|max:100',
-            'composito'      => 'nullable|string|max:100',
+            'composition'      => 'nullable|string|max:100',
             'client_id'  => 'required|exists:clients,id',
             'has_chestny_znak' => ['required','boolean'],
             'article'          => 'required|string|max:255',
-            'composition'      => 'required|string',
             'color'            => 'required|string|max:100',
             'category'         => ['required', Rule::in(array_map(fn($c) => $c->value, ProductCategory::cases()))],
         ]);

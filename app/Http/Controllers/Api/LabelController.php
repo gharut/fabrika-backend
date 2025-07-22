@@ -12,10 +12,15 @@ use Illuminate\Http\JsonResponse;
 class LabelController extends Controller
 {
     public function __construct(private LabelService $service) {}
-
-    public function index(): JsonResponse
+    
+    public function index(Request $request): JsonResponse
     {
-        return response()->json($this->service->getAll());
+        $clientId = $request->query('client_id');
+        $name = $request->query('name');
+
+        return response()->json(
+            $this->service->getAll($clientId, $name)
+        );
     }
 
     public function show(int $id): JsonResponse
