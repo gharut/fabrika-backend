@@ -41,4 +41,10 @@ class WbProduct extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
+    public function sizes()
+    {
+        return $this->hasMany(ProductSize::class, 'product_id')
+            ->select(['id', 'product_id', 'barcode', 'value']);
+    }
 }

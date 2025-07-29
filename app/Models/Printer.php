@@ -11,9 +11,8 @@ class Printer extends Model
 
     protected $fillable = [
         'name',
-        'warehouse_id',
-        'is_active',
         'labels_count',
+        'capacity',
         'warning_threshold',
         'last_synced_at',
         'created_by',
@@ -21,18 +20,12 @@ class Printer extends Model
     ];
 
     protected $casts = [
-        'is_active' => 'boolean',
         'labels_count' => 'integer',
         'warning_threshold' => 'integer',
         'last_synced_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
-
-    public function warehouse()
-    {
-        return $this->belongsTo(Warehouse::class);
-    }
 
     public function creator()
     {

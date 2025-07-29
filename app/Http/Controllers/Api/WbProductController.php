@@ -34,6 +34,17 @@ class WbProductController extends Controller
         return response()->json($wbProducts);
     }
 
+    public function getAllWithSizes(Request $request): JsonResponse
+    {
+        $clientIdParam = $request->query('client_id');
+        $clientId = is_numeric($clientIdParam) ? (int)$clientIdParam : null;
+
+        $name = $request->query('name');
+
+        $wbProducts = $this->service->getAllWithSizes($clientId, $name);
+        return response()->json($wbProducts);
+    }
+    
     public function show(int $id): JsonResponse
     {
         $wbProduct = $this->service->getById($id);

@@ -161,6 +161,7 @@ Route::group([
     Route::put   ('labels/{label}', [\App\Http\Controllers\Api\LabelController::class, 'update']);
     Route::delete('labels/{label}', [\App\Http\Controllers\Api\LabelController::class, 'destroy']);
 
+    Route::get('wb-products/sizes', [\App\Http\Controllers\Api\WbProductController::class, 'getAllWithSizes']);
     Route::apiResource('wb-products', \App\Http\Controllers\Api\WbProductController::class);
     Route::apiResource('product-sizes', \App\Http\Controllers\Api\ProductSizeController::class);
 

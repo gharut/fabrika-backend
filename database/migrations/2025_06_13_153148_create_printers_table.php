@@ -14,10 +14,9 @@ return new class extends Migration
         Schema::create('printers', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->foreignId('warehouse_id')->constrained()->cascadeOnDelete();
-            $table->boolean('is_active')->default(true);
             $table->integer('labels_count')->default(0);
             $table->integer('warning_threshold')->default(10);
+            $table->integer('capacity')->default(0);
             $table->timestamp('last_synced_at')->nullable();
             $table->foreignId('created_by')->constrained('users');
             $table->foreignId('updated_by')->constrained('users');

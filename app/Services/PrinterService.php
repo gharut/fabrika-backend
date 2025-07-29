@@ -11,13 +11,13 @@ class PrinterService
 {
     public function getAll(int $perPage = 15): LengthAwarePaginator
     {
-        return Printer::with(['warehouse','creator','editor'])->paginate($perPage);
+        return Printer::with(['creator','editor'])->paginate($perPage);
     }
 
 
     public function getOne(int $id): Printer
     {
-        return Printer::with(['warehouse','creator','editor'])->findOrFail($id);
+        return Printer::with(['creator','editor'])->findOrFail($id);
     }
 
     public function create(array $data): Printer
@@ -45,15 +45,12 @@ class PrinterService
         $printer->delete();
     }
 
-    public function setLabelsCount(int $id, int $newCount): Printer
+    public function resetLabelsToCapacity(int $id): Printer
     {
-        if ($newCount < 0) {
-            throw new InvalidArgumentException('Labels count must be zero or positive.');
-        }
-
         $printer = Printer::findOrFail($id);
-        $printer->labels_count = $newCount;
+        $printer->labels_count = $printer->capacity;
         $printer->save();
+
         return $printer;
     }
 }

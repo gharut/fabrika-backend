@@ -48,8 +48,8 @@ class PrinterController extends Controller
         return response()->noContent();
     }
 
-    public function syncCount(int $id, int $newCount): Printer
+    public function syncCount(int $id)
     {
-        return $this->setLabelsCount($id, $newCount);
+        return $this->printerService->resetLabelsToCapacity($id);
     }
 }

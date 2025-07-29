@@ -173,7 +173,40 @@
       </div>
     @endif
 
-    @if($withC128)
+    @if($withC128 || $dupC128)
+      <div class="label-box">
+        <div class="label-header">
+          <span class="label-header-text">{{ $label->name }}</span>
+        </div>
+
+        <div class="label-content">
+          <div class="label" style="width: 80%">
+            <div class="label-line">Артикул: {{ $label->article }}</div>
+            <div class="label-line">Цвет: {{ $label->color }}</div>
+          </div>
+
+          <div class="label text-center" style="width: 20%">
+            <div class="label-size">{{ $label->size }}</div>
+          </div>
+        </div>
+        
+        <div class="label-content">
+          <div class="label">
+            <div class="label-line">{{ $label->client }}</div>
+            <div class="label-line">Состав: {{ $label->composition }}</div>
+          </div>                  
+        </div>
+        
+        <div class="label-barcode-block">
+          <img
+            alt="Штрихкод"
+            src="data:image/png;base64,{{ $label->barcode1D }}"
+          />
+        </div>
+      </div>
+    @endif
+
+    @if($dupC128)
       <div class="label-box">
         <div class="label-header">
           <span class="label-header-text">{{ $label->name }}</span>
