@@ -28,6 +28,52 @@ class ClientController extends Controller
         return response()->json($clients);
     }
 
+    public function getAllFiltered(Request $request): JsonResponse
+    {
+        $filters = $request->input('filters', []);
+        $sortBy = $request->input('sort_by', 'id');
+        $sortDir = $request->input('sort_dir', 'asc');
+
+        $query = Client::query();
+
+        foreach ($filters as $filter) {
+            $field = $filter['field'] ?? null;
+            $op = $filter['op'] ?? 'eq';
+            $value = $filter['value'] ?? null;
+
+            if (!$field || $value === null) continue;
+
+            switch ($op) {
+                case 'eq':
+                    $query->where($field, '=', $value);
+                    break;
+                case 'ne':
+                    $query->where($field, '!=', $value);
+                    break;
+                case 'like':
+                    $query->where($field, 'like', '%' . $value . '%');
+                    break;
+            }
+        }
+
+        $sortDir = in_array(strtolower($sortDir), ['asc', 'desc']) ? $sortDir : 'asc';
+        if ($sortBy === 'type') {
+            $query->orderByRaw("
+                CASE type
+                    WHEN 'individual' THEN 'Индивидуальный предприниматель'
+                    WHEN 'legal_entity' THEN 'Юридическое лицо'
+                    ELSE type
+                END $sortDir
+            ");
+        } else {
+            $query->orderBy($sortBy, $sortDir);
+        }
+
+        return response()->json(
+            $query->get()
+        );
+    }
+
     /**
      * Store a newly created resource in storage.
      */

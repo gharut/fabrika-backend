@@ -23,6 +23,17 @@ class LabelController extends Controller
         );
     }
 
+    public function getAllFiltered(Request $request): JsonResponse
+    {
+        $filters = $request->input('filters', []);
+        $sortBy = $request->input('sort_by', 'id');
+        $sortDir = $request->input('sort_dir', 'asc');
+
+        return response()->json(
+            $this->service->getFiltered($filters, $sortBy, $sortDir)
+        );
+    }
+
     public function show(int $id): JsonResponse
     {
         return response()->json($this->service->getOne($id));

@@ -29,21 +29,44 @@ class WbProductService
         return $query->get();
     }
 
-    public function getAllWithSizes(?int $clientId = null, ?string $name = null): Collection
+    public function getAllWithSizes(array $filters, string $sortBy, string $sortDir): Collection
     {
-         $query = WbProduct::with([
+        $query = WbProduct::with([
             'client',
-            'sizes' => function ($q) {
-                $q->select('id', 'product_id', 'barcode', 'value');
-            }
+            'sizes' => fn($q) => $q->select('id', 'product_id', 'barcode', 'value')
         ]);
 
-        if ($clientId !== null) {
-            $query->where('client_id', $clientId);
+        foreach ($filters as $filter) {
+            $field = $filter['field'] ?? null;
+            $op = $filter['op'] ?? 'eq';
+            $value = $filter['value'] ?? null;
+
+            if (!$field || $value === null) continue;
+
+            switch ($op) {
+                case 'eq':
+                    $query->where($field, '=', $value);
+                    break;
+                case 'ne':
+                    $query->where($field, '!=', $value);
+                    break;
+                case 'like':
+                    $query->where($field, 'like', '%' . $value . '%');
+                    break;
+            }
         }
 
-        if (!empty($name)) {
-            $query->where('name', 'like', '%' . $name . '%');
+        $sortDir = in_array(strtolower($sortDir), ['asc', 'desc']) ? $sortDir : 'asc';
+        if ($sortBy === 'category') {
+            $query->orderByRaw("
+                CASE category
+                    WHEN 'clothes' THEN 'Одежда'
+                    WHEN 'shoes' THEN 'Обувь'
+                    ELSE category
+                END $sortDir
+            ");
+        } else {
+            $query->orderBy($sortBy, $sortDir);
         }
 
         return $query->get();

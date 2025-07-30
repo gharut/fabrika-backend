@@ -3,6 +3,7 @@ namespace App\Services;
 
 use App\Models\Label;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 use InvalidArgumentException;
 use Illuminate\Support\Facades\Auth;
 
@@ -22,6 +23,58 @@ class LabelService
             ->paginate($perPage);
     }
 
+    public function getFiltered(array $filters, string $sortBy, string $sortDir): Collection
+    {
+        $query = Label::with(['product', 'client']);
+
+        foreach ($filters as $filter) {
+            $field = $filter['field'] ?? null;
+            $op = $filter['op'] ?? 'eq';
+            $value = $filter['value'] ?? null;
+
+            if (!$field || $value === null) continue;
+
+            if (str_contains($field, '.')) {
+                [$relation, $subField] = explode('.', $field, 2);
+                $query->whereHas($relation, function ($q) use ($subField, $op, $value) {
+                    match ($op) {
+                        'eq'  => $q->where($subField, '=', $value),
+                        'ne'  => $q->where($subField, '!=', $value),
+                        'like' => $q->where($subField, 'like', '%' . $value . '%'),
+                    };
+                });
+            } else {
+                match ($op) {
+                    'eq'  => $query->where($field, '=', $value),
+                    'ne'  => $query->where($field, '!=', $value),
+                    'like' => $query->where($field, 'like', '%' . $value . '%'),
+                };
+            }
+        }
+
+        $sortDir = in_array(strtolower($sortDir), ['asc', 'desc']) ? strtolower($sortDir) : 'asc';
+        if (str_contains($sortBy, '.')) {
+            [$relation, $column] = explode('.', $sortBy, 2);
+
+            match ($relation) {
+                'product' => $query
+                    ->join('wb_products', 'labels.product_id', '=', 'wb_products.id')
+                    ->orderBy("wb_products.$column", $sortDir),
+
+                'client' => $query
+                    ->join('clients', 'labels.client_id', '=', 'clients.id')
+                    ->orderBy("clients.$column", $sortDir),
+
+                default => $query->orderBy('labels.id'),
+            };
+
+            $query->select('labels.*');
+        } else {
+            $query->orderBy($sortBy, $sortDir);
+        }
+
+        return $query->get();
+    }
 
     public function getOne(int $id): Label
     {

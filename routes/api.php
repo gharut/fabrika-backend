@@ -118,6 +118,7 @@ Route::group([
 
 
     Route::post('/clients/', [\App\Http\Controllers\Api\ClientController::class, 'store']);
+    Route::post('clients/filters', [\App\Http\Controllers\Api\ClientController::class, 'getAllFiltered']);
     Route::get('/clients/{client}', [\App\Http\Controllers\Api\ClientController::class, 'get']);
     Route::put('/clients/{client}', [\App\Http\Controllers\Api\ClientController::class, 'update']);
     Route::middleware('can:list-clients')->get('/clients/', [\App\Http\Controllers\Api\ClientController::class, 'list']);
@@ -157,11 +158,12 @@ Route::group([
 
     Route::get   ('labels', [\App\Http\Controllers\Api\LabelController::class, 'index']);
     Route::post  ('labels', [\App\Http\Controllers\Api\LabelController::class, 'store']);
+    Route::post  ('labels/filters', [\App\Http\Controllers\Api\LabelController::class, 'getAllFiltered']);
     Route::get   ('labels/{label}', [\App\Http\Controllers\Api\LabelController::class, 'show']);
     Route::put   ('labels/{label}', [\App\Http\Controllers\Api\LabelController::class, 'update']);
     Route::delete('labels/{label}', [\App\Http\Controllers\Api\LabelController::class, 'destroy']);
 
-    Route::get('wb-products/sizes', [\App\Http\Controllers\Api\WbProductController::class, 'getAllWithSizes']);
+    Route::post('wb-products/sizes', [\App\Http\Controllers\Api\WbProductController::class, 'getAllWithSizes']);
     Route::apiResource('wb-products', \App\Http\Controllers\Api\WbProductController::class);
     Route::apiResource('product-sizes', \App\Http\Controllers\Api\ProductSizeController::class);
 
