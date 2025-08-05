@@ -33,7 +33,12 @@ class WbProductService
     {
         $query = WbProduct::with([
             'client',
-            'sizes' => fn($q) => $q->select('id', 'product_id', 'barcode', 'value')
+            'sizes' => fn($q) =>
+                $q->select('id', 'product_id', 'barcode', 'value')
+                ->withCount([
+                    'chestnyZnakLabels as available_labels_count' => fn($q) =>
+                        $q->where('used', false)
+                ])
         ]);
 
         foreach ($filters as $filter) {
@@ -74,7 +79,10 @@ class WbProductService
 
     public function getById(int $id): WbProduct
     {
-        return WbProduct::with(['client'])->findOrFail($id);
+        return WbProduct::with([
+            'client',
+            'sizes' => fn($q) => $q->select('id', 'product_id', 'barcode', 'value')
+        ])->findOrFail($id);
     }
 
     public function create(array $data): WbProduct

@@ -73,32 +73,27 @@ class ChestnyZnakLabelController extends Controller
 
     public function import(ChestnyZnakLabelImportRequest $req): JsonResponse
     {
-        $files   = $req->file('file');
+        $files = $req->file('file');
         $sizeIds = $req->input('size_id');
 
-        $allCreated = [];
-        $allErrors  = [];
+        $fileResults = [];
 
         foreach ($files as $idx => $file) {
             $sizeId = (int) ($sizeIds[$idx] ?? 0);
-
             $path  = $file->getRealPath();
             $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
             $result = $this->service->importCsv($sizeId, $lines);
 
-            if (!empty($result['created'])) {
-                $allCreated = array_merge($allCreated, $result['created']);
-            }
-            if (!empty($result['errors'])) {
-                $allErrors[$file->getClientOriginalName()] = $result['errors'];
-            }
+            $fileResults[] = [
+                'fileName' => $file->getClientOriginalName(),
+                'created'  => $result['created_count'] ?? 0,
+                'errors'   => $result['errors'] ?? [],
+            ];
         }
 
-        $status = empty($allErrors) ? 201 : 207;
-        return response()->json([
-            'created' => $allCreated,
-            'errors'  => $allErrors,
-        ], $status);
+        $hasErrors = collect($fileResults)->contains(fn($f) => !empty($f['errors']));
+
+        return response()->json($fileResults, $hasErrors ? 207 : 201);
     }
     
     public function downloadPdfLabels(Request $request)

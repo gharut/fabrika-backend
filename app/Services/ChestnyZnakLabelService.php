@@ -88,23 +88,54 @@ class ChestnyZnakLabelService
 
     public function importCsv(int $sizeId, array $codes): array
     {
-        $created = [];
-        $errors  = [];
+        $createdCount = 0;
+        $errors = [];
 
         foreach ($codes as $code) {
+            $code = trim($code);
+
             try {
-                $created[] = $this->create([
+                $this->create([
                     'size_id' => $sizeId,
-                    'code'    => trim($code),
+                    'code' => $code,
                 ]);
+                $createdCount++;
             } catch (ValidationException $e) {
-                $errors[$code] = $e->errors();
+                $errors[] = [
+                    'code' => $code,
+                    'message' => $this->mapValidationError($e),
+                ];
             } catch (\Throwable $e) {
-                $errors[$code] = [$e->getMessage()];
+                $errors[] = [
+                    'code' => $code,
+                    'message' => 'Непредвиденная ошибка: ' . $e->getMessage(),
+                ];
             }
         }
 
-        return compact('created','errors');
+        return [
+            'created_count' => $createdCount,
+            'errors' => $errors,
+        ];
+    }
+
+    private function mapValidationError(ValidationException $e): string
+    {
+        $messages = [];
+
+        foreach ($e->errors() as $fieldErrors) {
+            foreach ($fieldErrors as $msg) {
+                $messages[] = match (true) {
+                    str_contains($msg, 'already been taken') => 'Код уже существует',
+                    str_contains($msg, 'required') => 'Код обязателен',
+                    str_contains($msg, 'unique') => 'Код должен быть уникальным',
+                    str_contains($msg, 'format') => 'Недопустимый формат кода',
+                    default => $msg,
+                };
+            }
+        }
+
+        return implode('; ', $messages);
     }
 
     public function markAsUnused(array $ids): object

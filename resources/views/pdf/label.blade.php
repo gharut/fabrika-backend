@@ -121,7 +121,7 @@
             />
           </div>  
           <div class="label-text">
-            <p>{{$label->name}}, цвет {{$label->color}}, размер {{$label->size}}</p>
+            <p>{{$label->name}}, {{$label->color}}, {{$label->size}}</p>
           </div>
         </div>
 
@@ -157,7 +157,7 @@
             />
           </div>  
           <div class="label-text">
-            <p>{{$label->name}}, цвет {{$label->color}}, размер {{$label->size}}</p>
+            <p>{{$label->name}}, {{$label->color}}, {{$label->size}}</p>
           </div>
         </div>
 
