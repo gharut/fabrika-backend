@@ -92,12 +92,14 @@ class WbProductService
             $data['created_by'] = $currentUserId;
             $data['updated_by'] = $currentUserId;
             $product = WbProduct::create($data);
+            $clientName = $product->client ? $product->client->name : '';
 
             Label::create([
-                'name'       => $product->name,
-                'created_by' => $currentUserId,
-                'updated_by' => $currentUserId,
-                'product_id' => $product->id,
+                'name'        => $product->name,
+                'client_name' => $clientName,
+                'created_by'  => $currentUserId,
+                'updated_by'  => $currentUserId,
+                'product_id'  => $product->id,
             ]);
 
             return $product;

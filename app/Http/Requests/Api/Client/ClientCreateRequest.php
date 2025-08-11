@@ -45,6 +45,7 @@ class ClientCreateRequest extends FormRequest
             'correspondent_account' => '',
             'bic' => '',
             'legal_address' => '',
+            'wb_api_token' => '',
             'vat' => ['nullable', 'numeric', 'between:0,100', 'regex:/^\d+(\.\d{1,2})?$/'],
             'details' => 'sometimes|array',
         ];

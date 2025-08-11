@@ -15,7 +15,7 @@ class ProductSizeCreateRequest extends FormRequest
     {
         return [
             'product_id' => ['required', 'exists:wb_products,id'],
-            'value' => ['required', 'string', 'max:255'],
+            'value' => ['nullable', 'string', 'max:255'],
             'barcode' => ['required', 'string', 'max:255'],
         ];
     }

@@ -34,6 +34,7 @@ class ClientUpdateRequest extends FormRequest
         return [
             'name' => 'required|string|unique:suppliers,name,'.$this->supplier->id.',id',
             'address' => 'string',
+            'wb_api_token' => 'string',
             'website' => 'url',
 
 

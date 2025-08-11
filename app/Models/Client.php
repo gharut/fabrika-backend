@@ -26,7 +26,8 @@ class Client extends Model
         'correspondent_account',
         'bic',
         'legal_address',
-        'vat'
+        'vat',
+        'wb_api_token'
     ];
 
     protected $casts = [

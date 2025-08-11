@@ -11,12 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('product_sizes', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('product_id')->constrained("wb_products")->cascadeOnDelete();
-            $table->string('value')->default('');
-            $table->string('barcode');
-            $table->timestamps();
+        Schema::table('clients', function (Blueprint $table) {
+            $table->text('wb_api_token')->nullable();
         });
     }
 
@@ -25,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('product_sizes');
+        Schema::table('clients', function (Blueprint $table) {
+            $table->dropColumn('wb_api_token');
+        });
     }
 };

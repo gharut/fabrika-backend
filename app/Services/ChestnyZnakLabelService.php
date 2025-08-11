@@ -126,7 +126,7 @@ class ChestnyZnakLabelService
         foreach ($e->errors() as $fieldErrors) {
             foreach ($fieldErrors as $msg) {
                 $messages[] = match (true) {
-                    str_contains($msg, 'already been taken') => 'Код уже существует',
+                    str_contains($msg, 'already been taken') => 'Уже ранее были загружены',
                     str_contains($msg, 'required') => 'Код обязателен',
                     str_contains($msg, 'unique') => 'Код должен быть уникальным',
                     str_contains($msg, 'format') => 'Недопустимый формат кода',

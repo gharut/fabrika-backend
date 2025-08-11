@@ -14,20 +14,33 @@ class Label extends Model
     protected $fillable = [
         'name',
         'product_id',
+        'client_name',
+        'printer_id',
         'created_by',
         'updated_by',
+        'print_single_ean13',
+        'print_double_ean13',
+        'duplicate_chz'
     ];
 
     protected $casts = [
-        'deleted_at'       => 'datetime',
-        'created_at'       => 'datetime',
-        'updated_at'       => 'datetime',
-        'category'         => ProductCategory::class,
+        'deleted_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'category' => ProductCategory::class,
+        'print_single_ean13' => 'boolean',
+        'print_double_ean13' => 'boolean',
+        'duplicate_chz' => 'boolean',
     ];
 
     public function product()
     {
         return $this->belongsTo(WbProduct::class, 'product_id');
+    }
+
+    public function printer()
+    {
+        return $this->belongsTo(Printre::class, 'printer_id');
     }
 
     public function client()

@@ -95,7 +95,8 @@ class ClientController extends Controller
             'correspondent_account',
             'bic',
             'legal_address',
-            'vat'
+            'vat',
+            'wb_api_token'
         ));
 
         $saved = $client->save();
@@ -137,7 +138,8 @@ class ClientController extends Controller
             'correspondent_account',
             'bic',
             'legal_address',
-            'vat'
+            'vat',
+            'wb_api_token'
         ));
 
         $saved = $client->save();
