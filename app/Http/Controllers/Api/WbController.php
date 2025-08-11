@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use App\Services\Wb\WbService;
+use App\Services\WB\WbService;
 
 class WbController extends Controller
 {
