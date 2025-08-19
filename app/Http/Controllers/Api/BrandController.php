@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
-use App\Http\Requests\Brand\StoreBrandRequest;
-use App\Http\Requests\Brand\UpdateBrandRequest;
+use App\Http\Requests\Api\Brand\BrandCreateRequest;
+use App\Http\Requests\Api\Brand\BrandUpdateRequest;
+use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use App\Services\BrandService;
 use Illuminate\Http\Request;
@@ -16,7 +17,7 @@ class BrandController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = Brand::query()->with(['client' => function ($query) {
-            $query->select('id', 'name'); // Только id и название клиента
+            $query->select('id', 'name');
         }]);
 
         if ($clientId = $request->query('client_id')) {
@@ -43,13 +44,13 @@ class BrandController extends Controller
         ]));
     }
 
-    public function store(StoreBrandRequest $request): JsonResponse
+    public function store(BrandCreateRequest $request): JsonResponse
     {
         $brand = $this->service->create($request->validated());
         return response()->json($brand, 201);
     }
 
-    public function update(UpdateBrandRequest $request, Brand $brand): JsonResponse
+    public function update(BrandUpdateRequest $request, Brand $brand): JsonResponse
     {
         $brand = $this->service->update($brand, $request->validated());
         return response()->json($brand);

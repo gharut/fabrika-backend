@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use App\Enums\ProductCategory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Enums\SizeDisplayType;
 
 class Label extends Model
 {
@@ -14,23 +14,25 @@ class Label extends Model
     protected $fillable = [
         'name',
         'product_id',
+        'label_template_id',
         'client_name',
         'printer_id',
         'created_by',
         'updated_by',
         'print_single_ean13',
         'print_double_ean13',
-        'duplicate_chz'
+        'duplicate_chz',
+        'size_display_type'
     ];
 
     protected $casts = [
         'deleted_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'category' => ProductCategory::class,
         'print_single_ean13' => 'boolean',
         'print_double_ean13' => 'boolean',
         'duplicate_chz' => 'boolean',
+        'size_display_type' => SizeDisplayType::class,
     ];
 
     public function product()
@@ -41,6 +43,11 @@ class Label extends Model
     public function printer()
     {
         return $this->belongsTo(Printre::class, 'printer_id');
+    }
+
+    public function labelTemplate(): BelongsTo
+    {
+        return $this->belongsTo(LabelTemplate::class, 'label_template_id');
     }
 
     public function client()

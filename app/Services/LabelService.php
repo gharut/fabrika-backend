@@ -87,7 +87,8 @@ class LabelService
         $data['created_by'] = Auth::id();
         $data['updated_by'] = Auth::id();
 
-        return Label::create($data);
+        $label = Label::create($data);
+        return $label->loadMissing(['product']);
     }
 
     public function update(int $id, array $data): Label
@@ -96,7 +97,7 @@ class LabelService
         $data['updated_by'] = Auth::id();
 
         $label->fill($data)->save();
-        return $label;
+         return $label->fresh(['product']);
     }
 
     public function delete(int $id): void

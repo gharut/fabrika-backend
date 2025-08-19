@@ -101,22 +101,12 @@ class ChestnyZnakLabelController extends Controller
         $data = $request->validate([
             'sizeId' => 'required|exists:product_sizes,id',
             'labelId' => 'required|exists:labels,id',
-            'printerId' => 'required|exists:printers,id',
-            'quantity' => 'required|integer|min:1',
-            'includeDM' => 'required|boolean',
-            'includeSHK' => 'required|boolean',
-            'duplicateDM' => 'required|boolean',
-            'duplicateSHK' => 'required|boolean',
+            'quantity' => 'required|integer|min:1'
         ]);
         
         $options = new LabelPrintOptions(
             sizeId: $data['sizeId'],
             labelId: $data['labelId'],
-            printerId: $data['printerId'],
-            includeDM: $data['includeDM'],
-            includeSHK: $data['includeSHK'],
-            duplicateDM: $data['duplicateDM'],
-            duplicateSHK: $data['duplicateSHK'],
         );
 
         return $this->labelPdfService->generateFromHtml($options, $data['quantity']);

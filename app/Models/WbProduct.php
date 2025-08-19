@@ -15,6 +15,8 @@ class WbProduct extends Model
         'name',
         'color',
         'article',
+        'brand_id',
+        'vendor_code',
         'composition',
         'has_chestny_znak',
         'category',
@@ -30,6 +32,11 @@ class WbProduct extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function brand(): BelongsTo
+    {
+        return $this->belongsTo(Brand::class);
     }
 
     public function creator(): BelongsTo

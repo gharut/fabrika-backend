@@ -4,6 +4,7 @@ namespace App\Http\Requests\Api\Label;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use App\Enums\SizeDisplayType;
 
 class LabelUpdateRequest extends FormRequest
 {
@@ -19,6 +20,8 @@ class LabelUpdateRequest extends FormRequest
             'print_single_ean13' => ['sometimes', 'boolean'],
             'print_double_ean13' => ['sometimes', 'boolean'],
             'duplicate_chz' => ['sometimes', 'boolean'],
+            'label_template_id' => ['sometimes', 'integer', 'exists:label_templates,id'],
+            'size_display_type' => ['sometimes', 'string', Rule::in(array_column(SizeDisplayType::cases(), 'value'))],
         ];
     }
 }

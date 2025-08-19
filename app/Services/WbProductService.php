@@ -12,7 +12,7 @@ class WbProductService
 {
     public function getAll(?int $clientId = null, ?int $productId = null, ?string $name = null): Collection
     {
-        $query = WbProduct::with(['client']);
+        $query = WbProduct::with(['client', 'brand']);
 
         if ($clientId !== null) {
             $query->where('client_id', $clientId);
@@ -33,6 +33,7 @@ class WbProductService
     {
         $query = WbProduct::with([
             'client',
+            'brand',
             'sizes' => fn($q) =>
                 $q->select('id', 'product_id', 'barcode', 'value')
                 ->withCount([
@@ -81,6 +82,7 @@ class WbProductService
     {
         return WbProduct::with([
             'client',
+            'brand',
             'sizes' => fn($q) => $q->select('id', 'product_id', 'barcode', 'value')
         ])->findOrFail($id);
     }

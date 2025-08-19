@@ -4,6 +4,7 @@ namespace App\Http\Requests\Api\Label;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use App\Enums\SizeDisplayType;
 
 class LabelCreateRequest extends FormRequest
 {
@@ -16,9 +17,11 @@ class LabelCreateRequest extends FormRequest
             'product_id' => ['required','integer','exists:wb_products,id'],
             'client_name' => ['nullable', 'string', 'max:255'],
             'printer_id' => ['nullable', 'integer', 'exists:printers,id'],
+            'label_template_id' => ['nullable', 'integer', 'exists:label_templates,id'],
             'print_single_ean13' => ['nullable', 'boolean'],
             'print_double_ean13' => ['nullable', 'boolean'],
             'duplicate_chz' => ['nullable', 'boolean'],
+            'size_display_type' => ['nullable', 'string', Rule::in(array_column(SizeDisplayType::cases(), 'value'))],
         ];
     }
 }

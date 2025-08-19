@@ -11,6 +11,7 @@ use App\Services\WbProductService;
 use App\Models\WbProduct;
 use App\Models\ProductSize;
 use App\Models\Client;
+use App\Models\Brand;
 use App\Enums\ProductCategory;
 
 use Carbon\Carbon;
@@ -191,14 +192,22 @@ class WbService
             try {
                 $characteristics = $this->extractCharacteristics($card['characteristics'] ?? []);
                 
+                $brandResult = $this->createBrand($card['brand'], $clientId);
+                if (!empty($brandResult['errors'])) {
+                    $result['statistics']['errors'][] = implode("; ", $sizesResult['errors']);
+                }
+                $brandId = $brandResult['brandId'];
+
                 $productData = [
                     'client_id' => $clientId,
                     'name' => $card['title'] ?? 'Без названия',
+                    'vendor_code' => $card['vendorCode'] ?? '',
                     'color' => $characteristics['color'] ?? '',
                     'article' => $nmID,
                     'composition' => $characteristics['composition'] ?? '',
                     'has_chestny_znak' =>  false,
                     'category' => ProductCategory::CLOTHES,
+                    'brand_id' => $brandId,
                 ];
 
                 $existingProduct = WbProduct::where('article', $nmID)
@@ -221,7 +230,7 @@ class WbService
 
             } catch (\Exception $e) {
                 $result['success'] = false;
-                $result['statistics']['errors'][] = 'Ошибка при сохранении товара ' . $nmID;
+                $result['statistics']['errors'][] = 'Ошибка при сохранении товара ' . $nmID . $e;
                 continue;
             }
         }
@@ -251,7 +260,8 @@ class WbService
 
                 $sizeData = [
                     'product_id' => $productId,
-                    'value' => $size['techSize'] ?? '',
+                    'tech_size' => $size['techSize'] ?? '',
+                    'value' => $size['wbSize'] ?? '',
                     'barcode' => $barcode,
                 ];
 
@@ -267,6 +277,48 @@ class WbService
             } catch (\Exception $e) {
                 $result['errors'][] = $result['processed'] . " размеров создано. Ошибка при создании размера товара " . $article;
             }
+        }
+
+        return $result;
+    }
+
+    public function createBrand(string $brandName, int $clientId): array
+    {
+        $result = [
+            'processed' => 0,
+            'errors' => [],
+            'brandId' => null
+        ];
+
+        if (empty($clientId)) {
+            $result['errors'][] = "Не указан ID клиента";
+            return $result;
+        }
+
+        if (!$brandName) {
+            return $result;
+        }
+
+        try {
+            $brandData = [
+                'name' => $brandName,
+                'client_id' => $clientId,
+            ];
+
+            $existingBrand = Brand::where('name', $brandName)
+                ->where('client_id', $clientId)
+                ->first();
+
+            if ($existingBrand) {
+                $result['brandId'] = $existingBrand->id;
+            } else {
+                $createdBrand = Brand::create($brandData);
+                $result['brandId'] = $createdBrand->id;
+                $result['processed'] = 1;
+            }
+
+        } catch (\Exception $e) {
+            $result['errors'][] = "Ошибка при создании бренда '{$brandName}': " . $e->getMessage();
         }
 
         return $result;

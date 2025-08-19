@@ -16,6 +16,7 @@ class ProductSizeUpdateRequest extends FormRequest
         return [
             'product_id' => ['sometimes', 'exists:wb_products,id'],
             'value' => ['sometimes', 'string', 'max:255'],
+            'tech_size' => ['sometimes', 'string', 'max:255'],
             'barcode' => ['sometimes', 'string', 'max:255'],
         ];
     }

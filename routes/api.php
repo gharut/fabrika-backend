@@ -167,6 +167,7 @@ Route::group([
     Route::apiResource('wb-products', \App\Http\Controllers\Api\WbProductController::class);
     Route::post('/wb/test', [\App\Http\Controllers\Api\WbController::class, 'import']);
     Route::apiResource('product-sizes', \App\Http\Controllers\Api\ProductSizeController::class);
+    Route::apiResource('brands', \App\Http\Controllers\Api\BrandController::class);
 
     Route::get('chestny-znak-labels', [App\Http\Controllers\Api\ChestnyZnakLabelController::class, 'index']);
     Route::post('chestny-znak-labels/import', [App\Http\Controllers\Api\ChestnyZnakLabelController::class, 'import']);

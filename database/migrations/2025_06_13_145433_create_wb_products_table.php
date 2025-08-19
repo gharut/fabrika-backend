@@ -16,9 +16,11 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
             $table->foreignId('client_id')->constrained('clients')->onDelete('restrict');
+            $table->foreignId('brand_id')->nullable()->constrained('brands')->onDelete('restrict');
             $table->string('name');
             $table->string('color')->nullable();
             $table->string('article');
+            $table->string('vendor_code')->nullable();
             $table->string('composition')->nullable();
             $table->boolean('has_chestny_znak')->default(false);
             
