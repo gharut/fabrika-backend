@@ -162,6 +162,15 @@ Route::group([
     Route::get   ('labels/{label}', [\App\Http\Controllers\Api\LabelController::class, 'show']);
     Route::put   ('labels/{label}', [\App\Http\Controllers\Api\LabelController::class, 'update']);
     Route::delete('labels/{label}', [\App\Http\Controllers\Api\LabelController::class, 'destroy']);
+    
+    Route::get('/label-templates', [\App\Http\Controllers\Api\LabelTemplateController::class, 'index']);
+
+    Route::post('/labels-pdf/print', [\App\Http\Controllers\Api\LabelDesignerController::class, 'print']);
+    Route::post('/labels-pdf/preview', [\App\Http\Controllers\Api\LabelDesignerController::class, 'preview']);
+
+    Route::post('/wb-promo/start', [\App\Http\Controllers\Api\PromoController::class, 'start']);
+    Route::post('/wb-promo/revert', [\App\Http\Controllers\Api\PromoController::class, 'revert']);
+    Route::get('/wb-promo/status', [\App\Http\Controllers\Api\PromoController::class, 'status']);
 
     Route::post('wb-products/sizes', [\App\Http\Controllers\Api\WbProductController::class, 'getAllWithSizes']);
     Route::apiResource('wb-products', \App\Http\Controllers\Api\WbProductController::class);

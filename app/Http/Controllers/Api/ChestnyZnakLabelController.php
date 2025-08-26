@@ -109,7 +109,8 @@ class ChestnyZnakLabelController extends Controller
             labelId: $data['labelId'],
         );
 
-        return $this->labelPdfService->generateFromHtml($options, $data['quantity']);
+        // return $this->labelPdfService->generateFromHtml($options, $data['quantity']);
+        return $this->labelPdfService->generateFromDesignerSchema($options, $data['quantity']);
     }
 
     public function replaceSize(Request $request)

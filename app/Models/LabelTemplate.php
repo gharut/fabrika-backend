@@ -13,6 +13,7 @@ class LabelTemplate extends Model
     protected $fillable = [
         'name',
         'user_id',
+        'content',
         'is_system'
     ];
 
@@ -23,5 +24,15 @@ class LabelTemplate extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function editor()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 }

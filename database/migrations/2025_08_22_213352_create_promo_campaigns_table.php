@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('label_templates', function (Blueprint $table) {
+        Schema::create('promo_campaigns', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->longText('content')->nullable();
-            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->boolean('is_system')->default(false);
+            $table->string('external_id', 100)->nullable();
+
+            $table->enum('status', [
+                'queued','snapshotting','applied','reverting','reverted','failed'
+            ])->default('queued');
             $table->timestamps();
         });
     }
@@ -26,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('label_templates');
+        Schema::dropIfExists('promo_campaigns');
     }
 };
