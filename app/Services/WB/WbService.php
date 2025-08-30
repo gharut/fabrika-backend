@@ -12,6 +12,7 @@ use App\Models\WbProduct;
 use App\Models\ProductSize;
 use App\Models\Client;
 use App\Models\Brand;
+use App\Models\ProductImage;
 use App\Enums\ProductCategory;
 
 use Carbon\Carbon;
@@ -221,6 +222,27 @@ class WbService
                 } else {
                     $product = $this->wbProductService->create($productData);
                     $result['statistics']['products_created']++;
+                }
+
+                if (!empty($card['photos']) && is_array($card['photos'])) {
+                    $firstPhoto = $card['photos'][0]['big'] ?? null;
+                    if ($firstPhoto) {
+                        $existingImage = ProductImage::where('product_id', $product->id)->first();
+
+                        if (!$existingImage) {
+                            ProductImage::create([
+                                'product_id' => $product->id,
+                                'url'        => $firstPhoto,
+                                'path'       => null,
+                                'position'   => 0,
+                                'type'       => 'main',
+                                'alt'        => $product->name,
+                                'width'      => null,
+                                'height'     => null,
+                                'storage'    => 'url',
+                            ]);
+                        }
+                    }
                 }
 
                 $sizesResult = $this->processSizes($product->id, $product->article, $card['sizes'] ?? []);

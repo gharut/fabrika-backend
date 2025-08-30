@@ -54,4 +54,14 @@ class WbProduct extends Model
         return $this->hasMany(ProductSize::class, 'product_id')
             ->select(['id', 'product_id', 'barcode', 'value']);
     }
+
+    public function images()
+    {
+        return $this->hasMany(ProductImage::class)->orderBy('position');
+    }
+
+    public function mainImage()
+    {
+        return $this->hasOne(ProductImage::class)->orderBy('position');
+    }
 }

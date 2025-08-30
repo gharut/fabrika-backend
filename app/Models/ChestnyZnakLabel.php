@@ -18,6 +18,8 @@ class ChestnyZnakLabel extends Model
         'used_at',
         'created_by',
         'updated_by',
+        'operation_id',
+        'number',
     ];
 
     protected $casts = [
@@ -43,5 +45,10 @@ class ChestnyZnakLabel extends Model
     public function editor()
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function operation()
+    {
+        return $this->belongsTo(FileOperation::class, 'operation_id');
     }
 }

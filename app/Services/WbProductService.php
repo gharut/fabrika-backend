@@ -29,6 +29,55 @@ class WbProductService
         return $query->get();
     }
 
+    // public function getAllWithSizes(array $filters, string $sortBy, string $sortDir): Collection
+    // {
+    //     $query = WbProduct::with([
+    //         'client',
+    //         'brand',
+    //         'sizes' => fn($q) =>
+    //             $q->select('id', 'product_id', 'barcode', 'value')
+    //             ->withCount([
+    //                 'chestnyZnakLabels as available_labels_count' => fn($q) =>
+    //                     $q->where('used', false)
+    //             ])
+    //     ]);
+
+    //     foreach ($filters as $filter) {
+    //         $field = $filter['field'] ?? null;
+    //         $op = $filter['op'] ?? 'eq';
+    //         $value = $filter['value'] ?? null;
+
+    //         if (!$field || $value === null) continue;
+
+    //         switch ($op) {
+    //             case 'eq':
+    //                 $query->where($field, '=', $value);
+    //                 break;
+    //             case 'ne':
+    //                 $query->where($field, '!=', $value);
+    //                 break;
+    //             case 'like':
+    //                 $query->where($field, 'like', '%' . $value . '%');
+    //                 break;
+    //         }
+    //     }
+
+    //     $sortDir = in_array(strtolower($sortDir), ['asc', 'desc']) ? $sortDir : 'asc';
+    //     if ($sortBy === 'category') {
+    //         $query->orderByRaw("
+    //             CASE category
+    //                 WHEN 'clothes' THEN 'Одежда'
+    //                 WHEN 'shoes' THEN 'Обувь'
+    //                 ELSE category
+    //             END $sortDir
+    //         ");
+    //     } else {
+    //         $query->orderBy($sortBy, $sortDir);
+    //     }
+
+    //     return $query->get();
+    // }
+    
     public function getAllWithSizes(array $filters, string $sortBy, string $sortDir): Collection
     {
         $query = WbProduct::with([
@@ -42,23 +91,43 @@ class WbProductService
                 ])
         ]);
 
-        foreach ($filters as $filter) {
+        $applyFilter = function ($q, $filter) use (&$applyFilter) {
             $field = $filter['field'] ?? null;
             $op = $filter['op'] ?? 'eq';
             $value = $filter['value'] ?? null;
 
-            if (!$field || $value === null) continue;
+            if (!$field || $value === null) return;
 
             switch ($op) {
-                case 'eq':
-                    $query->where($field, '=', $value);
-                    break;
-                case 'ne':
-                    $query->where($field, '!=', $value);
-                    break;
-                case 'like':
-                    $query->where($field, 'like', '%' . $value . '%');
-                    break;
+                case 'eq': $q->where($field, '=', $value); break;
+                case 'ne': $q->where($field, '!=', $value); break;
+                case 'like': $q->where($field, 'like', '%' . $value . '%'); break;
+            }
+        };
+
+        foreach ($filters as $filter) {
+            // группа (OR/AND)
+            if (isset($filter['group']) && isset($filter['filters'])) {
+                $group = strtolower($filter['group']);
+                $subFilters = $filter['filters'];
+
+                $query->where(function ($q) use ($subFilters, $group, $applyFilter) {
+                    foreach ($subFilters as $i => $subFilter) {
+                        if ($group === 'or' && $i === 0) {
+                            // первый условие
+                            $applyFilter($q, $subFilter);
+                        } elseif ($group === 'or') {
+                            $q->orWhere(function ($sq) use ($subFilter, $applyFilter) {
+                                $applyFilter($sq, $subFilter);
+                            });
+                        } else {
+                            // AND
+                            $applyFilter($q, $subFilter);
+                        }
+                    }
+                });
+            } else {
+                $applyFilter($query, $filter);
             }
         }
 

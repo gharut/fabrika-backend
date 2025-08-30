@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\ChestnyZnakLabel;
+use App\Models\FileOperation;
+
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -52,6 +54,8 @@ class ChestnyZnakLabelService
                     }
                 },
             ],
+            'operation_id' => 'nullable|integer|exists:file_operations,id',
+            'number' => 'nullable|integer|min:1',
         ];
 
         $validated = Validator::make($data, $rules)->validate();
@@ -87,35 +91,62 @@ class ChestnyZnakLabelService
     }
 
     public function importCsv(int $sizeId, array $codes): array
-    {
+    {   
+        $userId = Auth::id();
+        $operation = FileOperation::create([
+            'operation_type'  => 'import',
+            'file_name'       => '',
+            'file_extension'  => 'csv',
+            'file_size'       => null,
+            'user_id'         => $userId,
+            'status'          => FileOperation::STATUS_IN_PROGRESS,
+            'related_to'      => 'ChestnyZnakLabel',
+        ]);
+
         $createdCount = 0;
         $errors = [];
+        $seq = 1;
 
         foreach ($codes as $code) {
             $code = trim($code);
 
             try {
                 $this->create([
-                    'size_id' => $sizeId,
-                    'code' => $code,
+                    'size_id'     => $sizeId,
+                    'code'        => $code,
+                    'operation_id'=> $operation->id,
+                    'number'  => $seq,
                 ]);
                 $createdCount++;
             } catch (ValidationException $e) {
                 $errors[] = [
+                    'seq' => $seq,
                     'code' => $code,
                     'message' => $this->mapValidationError($e),
                 ];
             } catch (\Throwable $e) {
                 $errors[] = [
+                    'seq' => $seq,
                     'code' => $code,
                     'message' => 'Непредвиденная ошибка: ' . $e->getMessage(),
                 ];
             }
+
+            $seq++;
         }
 
+        $operation->update([
+            'status' => empty($errors)
+                ? FileOperation::STATUS_SUCCESS
+                : ($createdCount > 0 ? 'partial' : FileOperation::STATUS_FAILED),
+            'error_message' => empty($errors) ? null : 'Есть ошибки при обработке.',
+            'finished_at' => now(),
+        ]);
+
         return [
-            'created_count' => $createdCount,
-            'errors' => $errors,
+            'operation_id'   => $operation->id,
+            'created_count'  => $createdCount,
+            'errors'         => $errors,
         ];
     }
 
@@ -188,7 +219,8 @@ class ChestnyZnakLabelService
     {
         return ChestnyZnakLabel::where('size_id', $sizeId)
             ->where('used', false)
-            ->orderBy('created_at')
+            ->orderBy('created_at', 'asc')
+            ->orderBy('number', 'asc')
             ->limit($quantity)
             ->get();
     }

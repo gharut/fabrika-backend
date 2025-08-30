@@ -20,6 +20,8 @@ return new class extends Migration
             $table->timestamp('used_at')->nullable();
             $table->foreignId('created_by')->constrained('users')->restrictOnDelete();
             $table->foreignId('updated_by')->constrained('users')->restrictOnDelete();
+            $table->unsignedInteger('number')->nullable(); 
+            $table->foreignId('operation_id')->nullable()->constrained('file_operations')->restrictOnDelete();
 
             $table->timestamps();
             $table->softDeletes();

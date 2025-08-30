@@ -172,6 +172,9 @@ Route::group([
     Route::post('/wb-promo/revert', [\App\Http\Controllers\Api\PromoController::class, 'revert']);
     Route::get('/wb-promo/status', [\App\Http\Controllers\Api\PromoController::class, 'status']);
 
+    Route::get('/products-img/{id}', [\App\Http\Controllers\Api\ProductImageController::class, 'all']);
+    Route::get('/products-img/{id}', [\App\Http\Controllers\Api\ProductImageController::class, 'main']);
+
     Route::post('wb-products/sizes', [\App\Http\Controllers\Api\WbProductController::class, 'getAllWithSizes']);
     Route::apiResource('wb-products', \App\Http\Controllers\Api\WbProductController::class);
     Route::post('/wb/test', [\App\Http\Controllers\Api\WbController::class, 'import']);
