@@ -98,6 +98,9 @@ class ClientController extends Controller
             'vat',
             'wb_api_token'
         ));
+        $userId = $request->user()->id;
+        $client->created_by = $userId;
+        $client->updated_by = $userId;
 
         $saved = $client->save();
 
@@ -141,6 +144,8 @@ class ClientController extends Controller
             'vat',
             'wb_api_token'
         ));
+        $userId = $request->user()->id;
+        $client->updated_by = $userId;
 
         $saved = $client->save();
 

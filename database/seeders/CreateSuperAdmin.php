@@ -18,10 +18,10 @@ class CreateSuperAdmin extends Seeder
     {
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        $role = Role::create(['name' => 'super-admin', 'visible_name' => "Администратор", 'guard_name' => 'api']);
+        $role = Role::create(['name' => 'super-admin', 'visible_name' => "Супер администратор", 'guard_name' => 'api']);
 
         $user = \App\Models\User::factory()->create([
-             'name' => 'admin',
+             'name' => 'Super Admin',
              'email' => 'admin@test.com',
              'password' => Hash::make("admin")
          ]);

@@ -52,4 +52,15 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+    public function clientUsers()
+    {
+        return $this->hasMany(ClientUser::class, 'user_id');
+    }
+
+    public function clients()
+    {
+        return $this->belongsToMany(Client::class, 'client_users', 'user_id', 'client_id')
+            ->withPivot('role_id')
+            ->withTimestamps();
+    }
 }

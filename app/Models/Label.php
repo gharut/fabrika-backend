@@ -5,16 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Enums\SizeDisplayType;
+use App\Models\Concerns\BelongsToClient;
 
 class Label extends Model
 {
-    use HasFactory;
-    protected $table = 'labels';
+    use BelongsToClient, HasFactory;
 
+    protected $table = 'labels';
     protected $fillable = [
         'name',
         'product_id',
         'label_template_id',
+        'client_id',
         'client_name',
         'printer_id',
         'created_by',

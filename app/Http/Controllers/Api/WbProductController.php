@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Services\WbProductService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use App\Http\Requests\Api\WbProduct\WbProductCreateRequest;
+use App\Http\Requests\Api\WbProduct\WbProductUpdateRequest;
 use Illuminate\Validation\ValidationException;
 use App\Enums\ProductCategory;
 use Illuminate\Validation\Rule;
@@ -50,40 +52,22 @@ class WbProductController extends Controller
         return response()->json($wbProduct);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(WbProductCreateRequest $request): JsonResponse
     {
-        $data = $this->validate($request, [
-            'name'       => 'required|string|max:255',
-            'color'      => 'nullable|string|max:100',
-            'composition'      => 'nullable|string|max:100',
-            'client_id'  => 'required|exists:clients,id',
-            'brand_id'  => 'nullable|exists:brands,id',
-            'has_chestny_znak' => ['required','boolean'],
-            'article'          => 'required|string|max:255',
-            'vendor_code'          => 'nullable|string|max:255',
-            'color'            => 'required|string|max:100',
-            'category'         => ['required', Rule::in(array_map(fn($c) => $c->value, ProductCategory::cases()))],
-        ]);
+        $data = $request->validated();
         $wbProduct = $this->service->create($data);
-        return response()->json($wbProduct, 201);
+        
+        $wbProduct->refresh();
+        return response()->json($wbProduct->load(['client', 'brand']), 201);
     }
 
-    public function update(Request $request, int $id): JsonResponse
+    public function update(WbProductUpdateRequest $request, int $id): JsonResponse
     {
-        $data = $this->validate($request, [
-            'name'       => 'sometimes|required|string|max:255',
-            'color'      => 'sometimes|nullable|string|max:100',
-            'client_id'  => 'required|exists:clients,id',
-            'brand_id'  => 'sometimes|nullable|exists:brands,id',
-            'article'          => 'sometimes|string|max:255',
-            'vendor_code'      => 'sometimes|string|max:255',
-            'composition'      => 'sometimes|string',
-            'has_chestny_znak' => ['sometimes','boolean'],
-            'color'            => 'sometimes|string|max:100',
-            'category'         => ['sometimes', Rule::in(array_map(fn($c) => $c->value, ProductCategory::cases()))],
-        ]);
+        $data = $request->validated();
         $wbProduct = $this->service->update($id, $data);
-        return response()->json($wbProduct);
+        
+        $wbProduct->refresh();
+        return response()->json($wbProduct->load(['client', 'brand']));
     }
 
     public function destroy(int $id): JsonResponse

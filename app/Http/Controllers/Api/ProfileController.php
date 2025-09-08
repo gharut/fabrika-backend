@@ -39,20 +39,23 @@ class ProfileController extends Controller
         $user->email = $request->get('email');
         $user->address = $request->get('address');
         $user->phone = $request->get('phone');
+
         if (!empty($request->get('avatar'))) {
             $avatar_path = 'avatars/avatar-'.$user->id.'-'.time().'.png';
-            if($user->avatar != "") {
-                //unlink($user->avatar);
-                Storage::disk("local")->delete("public/".$user->avatar);
-            }
-            $file = base64_decode(
-                preg_replace('#^data:image/\w+;base64,#i', '', $request->get('avatar')
-            ));
-            if(Storage::disk("local")->put("public/".$avatar_path, $file)){
-                $user->avatar = $avatar_path;
+
+            if ($user->avatar) {
+                \Storage::disk('public')->delete($user->avatar);
             }
 
+            $file = base64_decode(
+                preg_replace('#^data:image/\w+;base64,#i', '', $request->get('avatar'))
+            );
+
+            if (\Storage::disk('public')->put($avatar_path, $file)) {
+                $user->avatar = $avatar_path;
+            }
         }
+
 
         if($request->get('change_password')) {
             $user->password = Hash::make($request->get('password'));

@@ -32,6 +32,9 @@ class AppServiceProvider extends ServiceProvider
                 config('wb.rate')
             );
         });
+        $this->app->scoped(\App\Support\ClientContext::class, function () {
+            return new \App\Support\ClientContext();
+        });
     }
 
     /**

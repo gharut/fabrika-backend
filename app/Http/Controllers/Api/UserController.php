@@ -11,7 +11,8 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
-
+use Spatie\Permission\Models\Role;
+use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
@@ -25,6 +26,43 @@ class UserController extends Controller
         }
 
         return response()->json($list);
+    }
+
+    public function check(Request $request): JsonResponse
+    {
+        $request->validate([
+            'permission' => 'required|string',
+        ]);
+
+        $user = $request->user(); // текущий аутентифицированный пользователь
+        $permission = $request->input('permission');
+
+        // Проверка права пользователя
+        $hasPermission = $user->can($permission);
+
+        // Получаем все роли пользователя
+        $roles = $user->roles->map(function ($role) {
+            return [
+                'id' => $role->id,
+                'name' => $role->name,
+                'guard_name' => $role->guard_name,
+                // Права этой роли
+                'permissions' => $role->permissions->pluck('name')
+            ];
+        });
+
+        // Все права пользователя (через роли и напрямую)
+        $userPermissions = $user->getAllPermissions()->pluck('name');
+
+        return response()->json([
+            'success' => true,
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'roles' => $roles,
+            'user_permissions' => $userPermissions,
+            'permission_checked' => $permission,
+            'has_permission' => $hasPermission,
+        ]);
     }
 
     public function store(UserCreateRequest $request)
@@ -73,5 +111,27 @@ class UserController extends Controller
         ]);
     }
 
+    public function assignRoles(Request $request): JsonResponse
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'roles' => 'required|array',
+            'roles.*' => 'string|exists:roles,name',
+        ]);
 
+        $user = User::findOrFail($request->user_id);
+        $roles = $request->roles;
+
+        $rolesToAssign = array_filter($roles, fn($role) => !$user->hasRole($role));
+
+        if (!empty($rolesToAssign)) {
+            $user->assignRole($rolesToAssign);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Роли успешно назначены',
+            'assigned_roles' => $user->roles->pluck('name'),
+        ]);
+    }
 }

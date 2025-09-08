@@ -7,7 +7,12 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\ImportController;
-
+use App\Http\Controllers\Api\MarketplaceAccountController;
+use App\Http\Controllers\Api\ClientUserController;
+use App\Http\Controllers\Api\LabelController;
+use App\Http\Controllers\Api\PrinterController;
+use App\Http\Controllers\Api\InvitationController;
+use App\Http\Controllers\Api\ChestnyZnakLabelController
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -23,17 +28,17 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+Route::post('/invitations/accept', [InvitationController::class, 'accept']);
 
 Route::group([
     'middleware' => 'api',
     'namespace' => 'App\Http\Controllers\Api',
     'prefix' => 'auth'
 ], function ($router) {
-
     Route::post('login',  [AuthController::class, 'login']);
     Route::post('register', [AuthController::class, 'register']);
     Route::post('reset-password',[AuthController::class, 'passwordReset']);
-
+    Route::post('request-password', [AuthController::class, 'requestPasswordReset']);
 });
 
 Route::group([
@@ -121,7 +126,7 @@ Route::group([
     Route::post('clients/filters', [\App\Http\Controllers\Api\ClientController::class, 'getAllFiltered']);
     Route::get('/clients/{client}', [\App\Http\Controllers\Api\ClientController::class, 'get']);
     Route::put('/clients/{client}', [\App\Http\Controllers\Api\ClientController::class, 'update']);
-    Route::middleware('can:list-clients')->get('/clients/', [\App\Http\Controllers\Api\ClientController::class, 'list']);
+    Route::middleware('can:view-clients')->get('/clients/', [\App\Http\Controllers\Api\ClientController::class, 'list']);
     Route::middleware('can:delete-clients')->delete('/clients/{client}', [\App\Http\Controllers\Api\ClientController::class, 'destroy']);
 
 
@@ -149,22 +154,61 @@ Route::group([
     Route::put('/warehouses/{id}', [\App\Http\Controllers\Api\WarehouseController::class, 'update']);
     Route::delete('/warehouses/{id}', [\App\Http\Controllers\Api\WarehouseController::class, 'destroy']);
     
-    Route::get('printers', [\App\Http\Controllers\Api\PrinterController::class, 'index']);
-    Route::post('printers', [\App\Http\Controllers\Api\PrinterController::class, 'store']);
-    Route::get('printers/{printer}', [\App\Http\Controllers\Api\PrinterController::class, 'show']);
-    Route::put('printers/{printer}', [\App\Http\Controllers\Api\PrinterController::class, 'update']);
-    Route::delete('printers/{printer}', [\App\Http\Controllers\Api\PrinterController::class, 'destroy']);
-    Route::post('printers/{printer}/sync-count', [\App\Http\Controllers\Api\PrinterController::class, 'syncCount']);
+    Route::prefix('client-users')->group(function () {
+        Route::get('/', [ClientUserController::class, 'index']);
+        Route::post('/', [ClientUserController::class, 'store']);
+        Route::put('{clientUser}', [ClientUserController::class, 'update']);
+        Route::get('{clientUser}', [ClientUserController::class, 'show']);
+        Route::delete('{clientUser}', [ClientUserController::class, 'destroy']);
+    });
 
-    Route::get   ('labels', [\App\Http\Controllers\Api\LabelController::class, 'index']);
-    Route::post  ('labels', [\App\Http\Controllers\Api\LabelController::class, 'store']);
-    Route::post  ('labels/filters', [\App\Http\Controllers\Api\LabelController::class, 'getAllFiltered']);
-    Route::get   ('labels/{label}', [\App\Http\Controllers\Api\LabelController::class, 'show']);
-    Route::put   ('labels/{label}', [\App\Http\Controllers\Api\LabelController::class, 'update']);
-    Route::delete('labels/{label}', [\App\Http\Controllers\Api\LabelController::class, 'destroy']);
+    Route::middleware(['current.client'])->prefix('wb')->group(function () {       
+        Route::middleware(['can:import-wb-product'])
+            ->post('/test', [\App\Http\Controllers\Api\WbController::class, 'import']);
+    });
+
+    Route::middleware(['current.client'])->prefix('marketplace-accounts')->group(function () {
+        Route::middleware(['can:view-marketplace-accounts'])->prefix('marketplace-accounts')->group(function () {
+            Route::get('/', [MarketplaceAccountController::class, 'index']);
+            Route::get('{marketplaceAccount}', [MarketplaceAccountController::class, 'show']);
+        });
+        
+        Route::middleware(['can:create-marketplace-accounts'])
+            ->post('/marketplace-accounts', [MarketplaceAccountController::class, 'store']);
+        
+        Route::middleware(['can:edit-marketplace-accounts'])
+            ->put('/marketplace-accounts/{marketplaceAccount}', [MarketplaceAccountController::class, 'update']);
+        
+        Route::middleware(['can:delete-marketplace-accounts'])
+            ->delete('/marketplace-accounts/{marketplaceAccount}', [MarketplaceAccountController::class, 'destroy']);
+    });
+
+    Route::prefix('printers')->group(function () {
+        Route::get('/', [PrinterController::class, 'index']);
+        Route::post('/', [PrinterController::class, 'store']);
+        Route::get('{printer}', [PrinterController::class, 'show']);
+        Route::put('{printer}', [PrinterController::class, 'update']);
+        Route::delete('{printer}', [PrinterController::class, 'destroy']);
+        Route::post('{printer}/sync-count', [PrinterController::class, 'syncCount']);
+    });
+
+    Route::middleware(['current.client'])->prefix('labels')->group(function () {
+        Route::get('/', [LabelController::class, 'index']);
+        Route::post('/', [LabelController::class, 'store']);
+        Route::post('/filters', [LabelController::class, 'getAllFiltered']);
+        Route::get('{label}', [LabelController::class, 'show']);
+        Route::put('{label}', [LabelController::class, 'update']);
+        Route::delete('{label}', [LabelController::class, 'destroy']);
+    });
     
-    Route::get('/label-templates', [\App\Http\Controllers\Api\LabelTemplateController::class, 'index']);
+    
+    Route::middleware(['current.client'])->prefix('invitations')->group(function () {
+        Route::get('/', [InvitationController::class, 'index']);              // список (по клиенту)
+        Route::post('/', [InvitationController::class, 'store']);             // создать
+        Route::delete('{id}', [InvitationController::class, 'revoke']);       // отозвать
+    });
 
+    Route::get('/label-templates', [\App\Http\Controllers\Api\LabelTemplateController::class, 'index']);
     Route::post('/labels-pdf/print', [\App\Http\Controllers\Api\LabelDesignerController::class, 'print']);
     Route::post('/labels-pdf/preview', [\App\Http\Controllers\Api\LabelDesignerController::class, 'preview']);
 
@@ -175,17 +219,22 @@ Route::group([
     Route::get('/products-img/{id}', [\App\Http\Controllers\Api\ProductImageController::class, 'all']);
     Route::get('/products-img/{id}', [\App\Http\Controllers\Api\ProductImageController::class, 'main']);
 
-    Route::post('wb-products/sizes', [\App\Http\Controllers\Api\WbProductController::class, 'getAllWithSizes']);
-    Route::apiResource('wb-products', \App\Http\Controllers\Api\WbProductController::class);
-    Route::post('/wb/test', [\App\Http\Controllers\Api\WbController::class, 'import']);
+    // Route::apiResource('wb-products', \App\Http\Controllers\Api\WbProductController::class);
+    Route::middleware(['current.client'])->group(function () {
+        Route::apiResource('wb-products', \App\Http\Controllers\Api\WbProductController::class);
+        Route::post('wb-products/sizes', [\App\Http\Controllers\Api\WbProductController::class, 'getAllWithSizes']);
+    });
+    
     Route::apiResource('product-sizes', \App\Http\Controllers\Api\ProductSizeController::class);
-    Route::apiResource('brands', \App\Http\Controllers\Api\BrandController::class);
+    Route::middleware(['current.client'])->apiResource('brands', \App\Http\Controllers\Api\BrandController::class);
 
-    Route::get('chestny-znak-labels', [App\Http\Controllers\Api\ChestnyZnakLabelController::class, 'index']);
-    Route::post('chestny-znak-labels/import', [App\Http\Controllers\Api\ChestnyZnakLabelController::class, 'import']);
-    Route::post('chestny-znak-labels/download-pdf', [\App\Http\Controllers\Api\ChestnyZnakLabelController::class,'downloadPdfLabels']);
-    Route::post('chestny-znak-labels/defective', [App\Http\Controllers\Api\ChestnyZnakLabelController::class, 'markAsUnused']);
-    Route::post('chestny-znak-labels/replace-size', [App\Http\Controllers\Api\ChestnyZnakLabelController::class, 'replaceSize']);
+    Route::prefix('chestny-znak-labels')->group(function () {
+        Route::middleware(['can:view-cz'])->get('/', [ChestnyZnakLabelController::class, 'index']);
+        Route::middleware(['can:download-pdf-cz'])->post('/download-pdf', [\ChestnyZnakLabelController::class, 'downloadPdfLabels']);
+        Route::middleware(['can:cz-defective'])->post('/defective', [ChestnyZnakLabelController::class, 'markAsUnused']);
+        Route::middleware(['can:import-cz'])->post('/import', [ChestnyZnakLabelController::class, 'import']);
+        Route::middleware(['can:replace-size-cz'])->post('/replace-size', [ChestnyZnakLabelController::class, 'replaceSize']);
+    });
 });
 
 Route::group([

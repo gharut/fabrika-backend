@@ -1,0 +1,25 @@
+<?php
+
+namespace App\Http\Requests\Api\MarketplaceAccount;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class MarketplaceAccountUpdateRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    public function rules(): array
+    {
+        return [
+            'platform'       => ['sometimes', new Enum(Marketplace::class)],
+            'name'           => ['sometimes', 'string', 'max:150'],
+            'api_token_enc'  => ['sometimes', 'string'],
+            'status'         => ['sometimes', 'string', 'max:50'],
+            'error_message'  => ['sometimes', 'string', 'nullable'],
+            'last_checked_at'=> ['sometimes', 'date'],
+        ];
+    }
+}

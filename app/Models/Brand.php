@@ -4,9 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Concerns\BelongsToClient;
 
 class Brand extends Model
 {
+    use BelongsToClient;
+
     protected $fillable = [
         'name',
         'client_id',
