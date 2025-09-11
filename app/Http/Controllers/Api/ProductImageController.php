@@ -19,10 +19,9 @@ class ProductImageController extends Controller
 
         if (!$image) {
             return response()->json([
-                'success' => false,
-                'message' => 'Фото не найдено',
+                'success' => true,
                 'data'    => null,
-            ], 404);
+            ], 204);
         }
 
         return response()->json([

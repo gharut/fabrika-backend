@@ -54,7 +54,9 @@ class CurrentClient
             ->exists();
 
         if (!$isMember) {
-            abort(403, 'You are not a member of this client');
+            return response()->json([
+                'message' => 'You are not a member of this client',
+            ], 403);
         }
 
         // Устанавливаем контекст

@@ -29,27 +29,10 @@ class Client extends Model
         'bic',
         'legal_address',
         'vat',
-        'wb_api_token',
         'created_by',
         'updated_by',
+        'owner_id',
     ];
-
-    // protected static function booted()
-    // {
-    //     static::addGlobalScope('visibleForUser', function (Builder $builder) {
-    //         if ($user = auth()->user()) {
-    //             if ($user->hasRole('super-admin')) {
-    //                 return;
-    //             }
-
-    //             if ($user->hasRole('manager') || $user->hasRole('seller')) {
-    //                 $builder->where(function ($q) use ($user) {
-    //                     $q->where('created_by', $user->id);
-    //                 });
-    //             }
-    //         }
-    //     });
-    // }
 
     public function creator()
     {
@@ -63,22 +46,18 @@ class Client extends Model
 
     protected static function booted(): void
     {
-        // Глобальный scope для автоматической фильтрации клиентов
         static::addGlobalScope('accessible', function (Builder $builder) {
             $user = Auth::user();
             
             if (!$user) {
-                // Для неаутентифицированных пользователей - пустой результат
                 $builder->whereNull('id');
                 return;
             }
 
-            // Супер-админы видят всех клиентов
             if ($user->hasRole('super-admin')) {
                 return;
             }
 
-            // Обычные пользователи видят только своих клиентов
             $builder->whereHas('users', function ($q) use ($user) {
                 $q->where('users.id', $user->id);
             });
@@ -88,8 +67,8 @@ class Client extends Model
     public function users()
     {
         return $this->belongsToMany(User::class, 'client_users', 'client_id', 'user_id')
-                    ->withPivot('role_id')
-                    ->withTimestamps();
+            ->withPivot('role_id')
+            ->withTimestamps();
     }
     
     protected $casts = [

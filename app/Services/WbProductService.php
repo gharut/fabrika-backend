@@ -83,6 +83,7 @@ class WbProductService
         $query = WbProduct::with([
             'client',
             'brand',
+            'labels',
             'sizes' => fn($q) =>
                 $q->select('id', 'product_id', 'barcode', 'value')
                 ->withCount([

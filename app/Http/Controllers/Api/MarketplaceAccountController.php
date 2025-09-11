@@ -57,4 +57,40 @@ class MarketplaceAccountController extends Controller
         $this->service->delete($marketplaceAccount);
         return response()->json(null, 204);
     }
+
+    public function checkConnection($id): JsonResponse
+    {
+        try {
+            $account = MarketplaceAccount::findOrFail($id);
+            
+            $isConnected = $account->checkConnection();
+            
+            return response()->json([
+                'success' => $isConnected,
+                'message' => $isConnected 
+                    ? 'Аккаунт успешно подключен' 
+                    : $account->error_message
+            ], $isConnected ? 200 : 422);
+            
+        } catch (ModelNotFoundException $e) {
+            Log::warning('Marketplace account not found', ['id' => $id]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Аккаунт не найден'
+            ], 404);
+            
+        } catch (\Exception $e) {
+            Log::error('Marketplace connection check failed', [
+                'id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Ошибка при проверке подключения: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

@@ -25,24 +25,25 @@ class WbService
 
     private string $base = 'https://content-api.wildberries.ru/content/v2/get/cards/list';
 
-    public function importWbProducts(int $clientId, int $limit = 100): array
+    public function importWbProducts(int $marketplaceAccountId, int $limit = 100): array
     {
-        
-
          try {
-            $tokenResult = $this->getClientWbToken($clientId);
-            if (!$tokenResult['success']) {
+           $marketplaceAccount = $this->getMarketplaceAccountWbToken($marketplaceAccountId);
+            if (!$marketplaceAccount['success']) {
                 return [
                     'success' => false,
                     'created' => 0,
                     'updated' => 0,
                     'total_processed' => 0,
-                    'errors' => [$tokenResult['value']],
+                    'errors' => [$marketplaceAccount['value']],
                 ];
             }
 
+            $apiToken = $marketplaceAccount['api_token_enc'];
+            $clientId = $marketplaceAccount['client_id'];
+
             $allCards = [];
-            foreach ($this->fetchAll($clientId, $limit) as $batch) { // передаем $limit
+            foreach ($this->fetchAll($apiToken, $limit) as $batch) {
                 $allCards = array_merge($allCards, $batch);
                 Log::info('Processed batch', ['count' => count($batch)]);
             }
@@ -71,36 +72,42 @@ class WbService
         }
     }
 
-    public function getClientWbToken(int $clientId): array
+    public function getMarketplaceAccountWbToken(int $marketplaceAccountId): array
     {
         $result = [
             'success' => false,
-            'value' => ''
+            'value' => '',
+            'token' => null,
+            'api_token_enc' => null,
+            'client_id' => null
         ];
 
         try {
-            $client = Client::find($clientId);
+            $marketplaceAccount = MarketplaceAccount::find($marketplaceAccountId);
             
-            if (!$client) {
-                $result['value'] = "Клиент {$clientId} не найден";
+            if (!$marketplaceAccount) {
+                $result['value'] = "Аккаунт маркетплейса {$marketplaceAccountId} не найден";
                 return $result;
             }
 
-            $token = $client->wb_api_token;
+            $token = $marketplaceAccount->wb_api_token;
             if (empty($token)) {
-                $result['value'] = "WB API токен не настроен для клиента {$client->name}";
+                $result['value'] = "WB API токен не настроен для аккаунта {$marketplaceAccount->name}";
                 return $result;
             }
 
             $result['success'] = true;
-            $result['value'] = $token;
+            $result['value'] = "Токен успешно получен";
+            $result['token'] = $token;
+            $result['api_token_enc'] = $marketplaceAccount->api_token_enc;
+            $result['client_id'] = $marketplaceAccount->client_id;
             
             return $result;
 
         } catch (\Exception $e) {
-            $result['value'] = "Ошибка при получении токена обратитесь к администратору.";
+            $result['value'] = "Ошибка при получении токена. Обратитесь к администратору.";
             Log::error('Ошибка получения WB токена', [
-                'client_id' => $clientId,
+                'marketplace_account_id' => $marketplaceAccountId,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -109,14 +116,12 @@ class WbService
         }
     }
 
-    public function fetchAll(int $clientId, int $limit = 100): \Generator
+    public function fetchAll(string $apiToken, int $limit = 100): \Generator
     {
-        $tokenResult = $this->getClientWbToken($clientId);
-        if (!$tokenResult['success']) {
+        if (empty($apiToken)) {
             return;
         }
 
-        $totalProcessed = 0;
         $cursor = ['limit' => $limit];
         $sort = ['ascending' => false];
         $filter = [
@@ -133,22 +138,28 @@ class WbService
             $payload = ['settings' => compact('cursor','filter','sort')];
 
             $resp = Http::withOptions(['verify' => false])
-                ->withHeaders(['Authorization' => $tokenResult['value']])
+                ->withHeaders(['Authorization' => $apiToken])
                 ->retry(5, 500, throw: false)
-                ->post($this->base.'?locale=ru', $payload)
-                ->throw()
-                ->json();
+                ->post($this->base.'?locale=ru', $payload);
             
-            $data   = $resp['data']   ?? $resp;
-            $cards  = $data['cards']  ?? [];
-            $cur    = $data['cursor'] ?? ($resp['cursor'] ?? []);
-            $total  = (int)($cur['total'] ?? count($cards));
+            if (!$resp->successful()) {
+                Log::error('WB API request failed', [
+                    'status' => $resp->status(),
+                    'response' => $resp->body()
+                ]);
+                return;
+            }
+
+            $data = $resp->json();
+            $data = $data['data'] ?? $data;
+            $cards = $data['cards'] ?? [];
+            $cur = $data['cursor'] ?? ($resp['cursor'] ?? []);
+            $total = (int)($cur['total'] ?? count($cards));
 
             if (empty($cards)) {
                 return;
             }
 
-            $totalProcessed += count($cards);
             yield $cards;
 
             $last = end($cards);

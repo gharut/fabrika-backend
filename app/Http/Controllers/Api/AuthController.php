@@ -9,6 +9,8 @@ use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Client;
+use App\Models\ClientUser;
 use App\Http\Requests\Api\Profile\ProfileUpdateRequest;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -28,8 +30,22 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password)
         ]);
-        $user->assignRole('admin');
+        $user->assignRole('user');
         $token = $user->createToken('auth_token')->plainTextToken;
+        $client = Client::create([
+            'name' => 'Новая организация',
+            'email' => $request->email,
+            'phone' => '',
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+            'owner_id' => $user->id,
+        ]);
+
+        $clientUser = ClientUser::create([
+            'user_id' => $user->id,
+            'client_id' => $client->id,
+            'role_id' => 3,
+        ]);
 
         return response()->json([
             'access_token' => $token,

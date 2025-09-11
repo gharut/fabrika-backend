@@ -33,40 +33,15 @@ class WbProduct extends Model
         'category' => ProductCategory::class,
     ];
 
-    // protected static function booted()
-    // {
-    //     static::addGlobalScope('visibleForUser', function (Builder $builder) {
-    //         if ($user = auth()->user()) {
-    //             $builder->where('created_by', $user->id);
-    //         }
-    //     });
-    // }
-
-    // protected static function booted()
-    // {
-    //     static::addGlobalScope('visibleForUser', function (Builder $builder) {
-    //         if ($user = auth()->user()) {
-    //             if ($user->hasRole('super-admin')) {
-    //                 return;
-    //             }
-
-    //             if ($user->hasRole('manager') || $user->hasRole('seller')) {
-    //                 $builder->where(function ($q) use ($user) {
-    //                     $q->where('created_by', $user->id)
-    //                     ->orWhereHas('client', function ($q2) use ($user) {
-    //                         $q2->where('created_by', $user->id);
-    //                     });
-    //                 });
-    //             } else {
-    //                 $builder->whereRaw('0=1');
-    //             }
-    //         }
-    //     });
-    // }
-
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function labels()
+    {
+        return $this->hasMany(Label::class, 'product_id')
+            ->select(['id', 'product_id', 'name']);
     }
 
     public function brand(): BelongsTo

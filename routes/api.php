@@ -12,7 +12,7 @@ use App\Http\Controllers\Api\ClientUserController;
 use App\Http\Controllers\Api\LabelController;
 use App\Http\Controllers\Api\PrinterController;
 use App\Http\Controllers\Api\InvitationController;
-use App\Http\Controllers\Api\ChestnyZnakLabelController
+use App\Http\Controllers\Api\ChestnyZnakLabelController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -154,9 +154,12 @@ Route::group([
     Route::put('/warehouses/{id}', [\App\Http\Controllers\Api\WarehouseController::class, 'update']);
     Route::delete('/warehouses/{id}', [\App\Http\Controllers\Api\WarehouseController::class, 'destroy']);
     
-    Route::prefix('client-users')->group(function () {
+    Route::get('/client-users/clients', [ClientUserController::class, 'getClientsByUser']);
+    Route::middleware(['current.client'])->prefix('client-users')->group(function () {
         Route::get('/', [ClientUserController::class, 'index']);
         Route::post('/', [ClientUserController::class, 'store']);
+        Route::get('/users', [ClientUserController::class, 'getUsersByClient']);
+        // Route::get('/clients', [ClientUserController::class, 'getClientsByUser']);
         Route::put('{clientUser}', [ClientUserController::class, 'update']);
         Route::get('{clientUser}', [ClientUserController::class, 'show']);
         Route::delete('{clientUser}', [ClientUserController::class, 'destroy']);
@@ -167,20 +170,21 @@ Route::group([
             ->post('/test', [\App\Http\Controllers\Api\WbController::class, 'import']);
     });
 
-    Route::middleware(['current.client'])->prefix('marketplace-accounts')->group(function () {
-        Route::middleware(['can:view-marketplace-accounts'])->prefix('marketplace-accounts')->group(function () {
+    Route::middleware(['current.client'])->prefix('marketplace-accounts')->group(function () {           
+        Route::middleware(['can:view-marketplace-accounts'])->group(function () {
             Route::get('/', [MarketplaceAccountController::class, 'index']);
+            Route::post('/check-connection/{id}', [MarketplaceAccountController::class, 'checkConnection']);
             Route::get('{marketplaceAccount}', [MarketplaceAccountController::class, 'show']);
         });
         
         Route::middleware(['can:create-marketplace-accounts'])
-            ->post('/marketplace-accounts', [MarketplaceAccountController::class, 'store']);
+            ->post('/', [MarketplaceAccountController::class, 'store']);
         
         Route::middleware(['can:edit-marketplace-accounts'])
-            ->put('/marketplace-accounts/{marketplaceAccount}', [MarketplaceAccountController::class, 'update']);
+            ->put('/{marketplaceAccount}', [MarketplaceAccountController::class, 'update']);
         
         Route::middleware(['can:delete-marketplace-accounts'])
-            ->delete('/marketplace-accounts/{marketplaceAccount}', [MarketplaceAccountController::class, 'destroy']);
+            ->delete('/{marketplaceAccount}', [MarketplaceAccountController::class, 'destroy']);
     });
 
     Route::prefix('printers')->group(function () {
@@ -230,7 +234,7 @@ Route::group([
 
     Route::prefix('chestny-znak-labels')->group(function () {
         Route::middleware(['can:view-cz'])->get('/', [ChestnyZnakLabelController::class, 'index']);
-        Route::middleware(['can:download-pdf-cz'])->post('/download-pdf', [\ChestnyZnakLabelController::class, 'downloadPdfLabels']);
+        Route::middleware(['can:download-pdf-cz'])->post('/download-pdf', [ChestnyZnakLabelController::class, 'downloadPdfLabels']);
         Route::middleware(['can:cz-defective'])->post('/defective', [ChestnyZnakLabelController::class, 'markAsUnused']);
         Route::middleware(['can:import-cz'])->post('/import', [ChestnyZnakLabelController::class, 'import']);
         Route::middleware(['can:replace-size-cz'])->post('/replace-size', [ChestnyZnakLabelController::class, 'replaceSize']);

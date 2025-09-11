@@ -4,6 +4,7 @@ namespace App\Http\Requests\Api\MarketplaceAccount;
 
 use App\Enums\Marketplace;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Enum;
 
 class MarketplaceAccountCreateRequest extends FormRequest
 {

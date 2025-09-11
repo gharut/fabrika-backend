@@ -36,7 +36,7 @@ class WbProductCreateRequest extends FormRequest
             'name' => 'required|string|max:255',
             'color' => 'nullable|string|max:100',
             'composition' => 'nullable|string|max:100',
-            'client_id' => 'nullable|exists:clients,id',
+            // 'client_id' => 'nullable|exists:clients,id',
             'brand_id' => 'nullable|exists:brands,id',
             'has_chestny_znak' => 'nullable|boolean',
             'article' => 'required|string|max:255',

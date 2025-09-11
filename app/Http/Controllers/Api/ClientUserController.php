@@ -6,8 +6,10 @@ use App\Http\Requests\Api\ClientUser\ClientUserCreateRequest;
 use App\Http\Requests\Api\ClientUser\ClientUserUpdateRequest;
 use App\Http\Controllers\Controller;
 use App\Models\ClientUser;
+use Illuminate\Http\Request;
 use App\Services\ClientUserService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 
 class ClientUserController extends Controller
 {
@@ -55,5 +57,23 @@ class ClientUserController extends Controller
         
         $this->service->delete($clientUser);
         return response()->json(null, 204);
+    }
+
+    public function getClientsByUser()
+    {
+        $userId = Auth::id();
+        $users = $this->service->getClientsByUser($userId);
+        return response()->json($users, 200);
+    }
+
+    public function getUsersByClient(Request $request)
+    {
+        $clientId = $request->header('X-Client-Id');
+        if (!$clientId) {
+          return response()->json([], 200);  
+        }
+
+        $clients = $this->service->getUsersByClient($clientId);
+        return response()->json($clients, 200);
     }
 }

@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::table('clients', function (Blueprint $table) {
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('restrict');
             $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('restrict');
+            $table->foreignId('owner_id')->nullable()->constrained('users')->onDelete('restrict');
         });
     }
 

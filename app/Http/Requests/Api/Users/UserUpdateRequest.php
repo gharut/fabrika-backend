@@ -17,9 +17,11 @@ class UserUpdateRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize(User $user): bool
-    {
-        return Auth::user()->can('edit-users');
+    public function authorize(): bool
+    {   
+        // return Auth::user()->can('edit-users');
+        $targetUserId = $this->route('user')->id;
+        return Auth::id() == $targetUserId;
     }
 
     /**
@@ -30,7 +32,7 @@ class UserUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|unique:users,name,'.$this->user->id.',id',
+            'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,'.$this->user->id.',id',
             'phone' => '',
             'address' => '',

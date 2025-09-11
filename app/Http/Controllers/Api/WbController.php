@@ -16,18 +16,15 @@ class WbController extends Controller
     public function import(Request $request)
     {
         $data = $request->validate([
-            'client_id' => 'required|integer|exists:clients,id',
+            'marketplace_account_id' => 'required|integer|exists:marketplace_accounts,id',
             'limit'     => 'nullable|integer|min:1|max:100',
         ]);
 
-        $limit    = $data['limit'] ?? 100;
-        $clientId = $data['client_id'];
+        $limit = $data['limit'] ?? 100;
+        $marketplaceAccountId = $data['marketplace_account_id'];
 
-        $result = $this->wbService->importWbProducts($clientId, $limit);
-
-        // Бизнес-ошибки → 422, системные вы уже залогировали в сервисе
+        $result = $this->wbService->importWbProducts($marketplaceAccountId, $limit);
         $status = $result['success'] ? 200 : 422;
-
         return response()->json($result, $status);
     }
 }

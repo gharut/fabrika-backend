@@ -96,7 +96,6 @@ class ClientController extends Controller
             'bic',
             'legal_address',
             'vat',
-            'wb_api_token'
         ));
         $userId = $request->user()->id;
         $client->created_by = $userId;
@@ -142,7 +141,6 @@ class ClientController extends Controller
             'bic',
             'legal_address',
             'vat',
-            'wb_api_token'
         ));
         $userId = $request->user()->id;
         $client->updated_by = $userId;

@@ -20,12 +20,7 @@ class BrandController extends Controller
             $query->select('id', 'name');
         }]);
 
-        if ($clientId = $request->query('client_id')) {
-            $query->where('client_id', $clientId);
-        }
-
-        $data = $query->orderBy('id', 'desc')->get();
-
+        $data = $query->orderBy('name', 'desc')->get();
         return response()->json($data);
     }
 
