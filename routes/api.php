@@ -170,6 +170,8 @@ Route::group([
             ->post('/test', [\App\Http\Controllers\Api\WbController::class, 'import']);
     });
 
+    Route::post('change-password', [AuthController::class, 'changePassword']);
+
     Route::middleware(['current.client'])->prefix('marketplace-accounts')->group(function () {           
         Route::middleware(['can:view-marketplace-accounts'])->group(function () {
             Route::get('/', [MarketplaceAccountController::class, 'index']);

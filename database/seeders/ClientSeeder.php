@@ -21,27 +21,6 @@ class UsersSeeder extends Seeder
     {
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        $admin = User::factory()->create([
-            'name' => 'Admin',
-            'email' => 'admin2@test.com',
-            'password' => Hash::make("admin")
-        ]);
-        $admin->assignRole('admin');
-
-        $manager = User::factory()->create([
-            'name' => 'Manager', 
-            'email' => 'manager@test.com',
-            'password' => Hash::make("manager")
-        ]);
-        $manager->assignRole('manager');
-
-        $logistics = User::factory()->create([
-            'name' => 'Logistics',
-            'email' => 'logistics@test.com', 
-            'password' => Hash::make("logistics")
-        ]);
-        $logistics->assignRole('logistics');
-
         Client::create([
             'name' => 'FFabrika',
             'phone'=> '',

@@ -20,11 +20,25 @@ class RolesController extends Controller
         ]);
     }
 
-    public function get(Role $role): JsonResponse {
-        $role->load("permissions");
+    public function get($id, Request $request): JsonResponse 
+    {
+        $role = Role::find($id);
+    
+        if (!$role) {
+            return response()->json([], 204);
+        }
+
+        if ($request->boolean('permissions')) {
+            $role->load('permissions');
+            
+            return response()->json([
+                'role' => $role->only(['id', 'name', 'visible_name']),
+                'permissions' => $role->permissions->map->only(['id', 'name', 'visible_name', 'description'])
+            ]);
+        }
+        
         return response()->json([
-            'success' => true,
-            'data' => $role,
+            'role' => $role->only(['id', 'name', 'visible_name']),
         ]);
     }
 
@@ -81,5 +95,4 @@ class RolesController extends Controller
             'data' => $saved ? $role : "",
         ]);
     }
-
 }
