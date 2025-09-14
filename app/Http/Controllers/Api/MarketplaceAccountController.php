@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\MarketplaceAccount;
 use App\Services\MarketplaceAccountService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 
 class MarketplaceAccountController extends Controller
 {
@@ -17,7 +18,7 @@ class MarketplaceAccountController extends Controller
 
     public function index(): JsonResponse
     {
-        $items = MarketplaceAccount::with('client')->get();
+        $items = MarketplaceAccount::get();
         return response()->json($items);
     }
 
@@ -69,8 +70,15 @@ class MarketplaceAccountController extends Controller
                 'success' => $isConnected,
                 'message' => $isConnected 
                     ? 'Аккаунт успешно подключен' 
-                    : $account->error_message
-            ], $isConnected ? 200 : 422);
+                    : $account->error_message,
+                'is_connected' => $isConnected,
+                'account' => [
+                    'id' => $account->id,
+                    'status' => $account->status,
+                    'error_message' => $account->error_message,
+                    'last_checked_at' => $account->last_checked_at?->toISOString()
+                ]
+            ], 200);
             
         } catch (ModelNotFoundException $e) {
             Log::warning('Marketplace account not found', ['id' => $id]);

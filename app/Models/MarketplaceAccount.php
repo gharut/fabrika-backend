@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Models\Concerns\BelongsToClient;
+use App\Enums\MarketplaceAccountStatus;
 
 class MarketplaceAccount extends Model
 {
@@ -22,6 +23,7 @@ class MarketplaceAccount extends Model
     ];
 
     protected $casts = [
+        'status' => MarketplaceAccountStatus::class,
         'last_checked_at' => 'datetime',
     ];
 

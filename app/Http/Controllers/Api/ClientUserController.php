@@ -47,16 +47,21 @@ class ClientUserController extends Controller
         return response()->json($item);
     }
 
-    public function destroy($id): JsonResponse
+    public function destroy(Request $request, $userId): JsonResponse
     {
-        $clientUser = ClientUser::find($id);
+        $clientId = $request->header('X-Client-Id');
+        $clientUser = ClientUser::where('client_id', $clientId)
+            ->where('user_id', $userId)
+            ->first();
         
         if (!$clientUser) {
-            return response()->json(['error' => 'Client user relation not found'], 404);
+            return response()->json([
+                'error' => 'Связь пользователя с клиентом не найдена'
+            ], 404);
         }
         
         $this->service->delete($clientUser);
-        return response()->json(null, 204);
+        return response()->json(['success' => true], 200);
     }
 
     public function getClientsByUser()

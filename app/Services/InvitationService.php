@@ -16,31 +16,35 @@ class InvitationService
 {
     public function accept(string $token, array $payload): User
     {
-        /** @var Invitation $inv */
-        $inv = Invitation::where('token',$token)->firstOrFail();
+        $inv = Invitation::where('token', $token)->firstOrFail();
         if (!$inv->isActive()) abort(410, 'Приглашение недействительно');
 
         return DB::transaction(function () use ($inv, $payload) {
-            // Ищем пользователя по email
             $user = User::where('email', $inv->email)->first();
-
-            if (!$user) {
-                $user = User::create([
-                    'name'     => $payload['name'] ?? explode('@',$inv->email)[0],
-                    'email'    => $inv->email,
-                    'password' => Hash::make($payload['password'] ?? Str::random(16)),
-                ]);
-                $roleMap = [
-                    2 => 'admin',
-                    3 => 'manager', 
-                    4 => 'logistics',
-                ];
+            
+            $existingClientUser = DB::table('client_users')
+                ->where('client_id', $inv->client_id)
+                ->where('user_id', $user?->id)
+                ->first();
                 
-                $roleName = $roleMap[$inv->role_id] ?? 'user';
-                $user->assignRole($roleName);
+            if ($existingClientUser) {
+                abort(409, 'Пользователь уже добавлен в эту организацию');
             }
 
-            // Привязываем к клиенту с ролью (upsert)
+            if (!$user) {
+                if (empty($payload['password'])) {
+                    abort(422, 'Пароль обязателен для нового пользователя');
+                }
+
+                $user = User::create([
+                    'name'     => $payload['name'] ?? explode('@', $inv->email)[0],
+                    'email'    => $inv->email,
+                    'password' => Hash::make($payload['password']),
+                ]);
+
+                $user->assignRole('user');
+            }
+
             DB::table('client_users')->upsert([[
                 'client_id' => $inv->client_id,
                 'user_id'   => $user->id,
@@ -49,7 +53,6 @@ class InvitationService
                 'updated_at'=> now(),
             ]], uniqueBy: ['client_id','user_id'], update: ['role_id','updated_at']);
 
-            // Закрываем приглашение
             $inv->accepted_at = now();
             $inv->save();
 
@@ -57,15 +60,26 @@ class InvitationService
         });
     }
 
-    public function revoke(int $invitationId): void
-    {
-        Invitation::whereKey($invitationId)
-            ->whereNull('accepted_at')
-            ->update(['revoked_at'=>now()]);
-    }
-
     public function create(int $clientId, int $inviterId, string $email, int $roleId, ?array $meta = null): array
     {
+        $email = mb_strtolower($email);
+        $user = User::where('email', $email)->first();
+        
+        if ($user) {
+            $existingClientUser = DB::table('client_users')
+                ->where('client_id', $clientId)
+                ->where('user_id', $user->id)
+                ->first();
+                
+            if ($existingClientUser) {
+                return [
+                    'message' => 'Пользователь уже добавлен в эту организацию',
+                    'mail_sent' => false,
+                    'status' => 'already_exists'
+                ];
+            }
+        }
+        
         Invitation::where('client_id', $clientId)
             ->where('email', $email)
             ->whereNull('accepted_at')
@@ -75,7 +89,7 @@ class InvitationService
         $inv = Invitation::create([
             'client_id'  => $clientId,
             'inviter_id' => $inviterId,
-            'email'      => mb_strtolower($email),
+            'email'      => $email,
             'role_id'    => $roleId,
             'token'      => Str::random(64),
             'expires_at' => now()->addDays(7),
@@ -84,11 +98,14 @@ class InvitationService
 
         $result = [
             'message' => '',
+            'status' => 'invitation_created'
         ];
 
         try {
             Mail::to($inv->email)->send(new InvitationMail($inv));
-            $result['message'] = 'Приглашение отправлено успешно';
+            $result['message'] = $user 
+                ? 'Приглашение отправлено существующему пользователю' 
+                : 'Приглашение отправлено новому пользователю';
             $result['mail_sent'] = true;
         } catch (\Exception $e) {
             $result['message'] = 'Ошибка отправки письма: ' . $e->getMessage();
@@ -96,5 +113,12 @@ class InvitationService
         }
 
         return $result;
+    }
+
+    public function revoke(int $invitationId): void
+    {
+        Invitation::whereKey($invitationId)
+            ->whereNull('accepted_at')
+            ->update(['revoked_at'=>now()]);
     }
 }

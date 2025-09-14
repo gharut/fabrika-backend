@@ -162,7 +162,7 @@ Route::group([
         // Route::get('/clients', [ClientUserController::class, 'getClientsByUser']);
         Route::put('{clientUser}', [ClientUserController::class, 'update']);
         Route::get('{clientUser}', [ClientUserController::class, 'show']);
-        Route::delete('{clientUser}', [ClientUserController::class, 'destroy']);
+        Route::delete('{userId}', [ClientUserController::class, 'destroy']);
     });
 
     Route::middleware(['current.client'])->prefix('wb')->group(function () {       
@@ -173,20 +173,30 @@ Route::group([
     Route::post('change-password', [AuthController::class, 'changePassword']);
 
     Route::middleware(['current.client'])->prefix('marketplace-accounts')->group(function () {           
-        Route::middleware(['can:view-marketplace-accounts'])->group(function () {
-            Route::get('/', [MarketplaceAccountController::class, 'index']);
+        // Route::middleware(['can:view-marketplace-accounts'])->group(function () {
+        //     Route::get('/', [MarketplaceAccountController::class, 'index']);
+        //     Route::post('/check-connection/{id}', [MarketplaceAccountController::class, 'checkConnection']);
+        //     Route::get('{marketplaceAccount}', [MarketplaceAccountController::class, 'show']);
+        // });
+
+        Route::get('/', [MarketplaceAccountController::class, 'index']);
             Route::post('/check-connection/{id}', [MarketplaceAccountController::class, 'checkConnection']);
             Route::get('{marketplaceAccount}', [MarketplaceAccountController::class, 'show']);
-        });
         
-        Route::middleware(['can:create-marketplace-accounts'])
-            ->post('/', [MarketplaceAccountController::class, 'store']);
+        // Route::middleware(['can:create-marketplace-accounts'])
+        //     ->post('/', [MarketplaceAccountController::class, 'store']);
         
-        Route::middleware(['can:edit-marketplace-accounts'])
-            ->put('/{marketplaceAccount}', [MarketplaceAccountController::class, 'update']);
+        // Route::middleware(['can:edit-marketplace-accounts'])
+        //     ->put('/{marketplaceAccount}', [MarketplaceAccountController::class, 'update']);
         
-        Route::middleware(['can:delete-marketplace-accounts'])
-            ->delete('/{marketplaceAccount}', [MarketplaceAccountController::class, 'destroy']);
+        // Route::middleware(['can:delete-marketplace-accounts'])
+        //     ->delete('/{marketplaceAccount}', [MarketplaceAccountController::class, 'destroy']);
+
+        Route::post('/', [MarketplaceAccountController::class, 'store']);
+        
+        Route::put('{marketplaceAccount}', [MarketplaceAccountController::class, 'update']);
+        
+        Route::delete('{marketplaceAccount}', [MarketplaceAccountController::class, 'destroy']);
     });
 
     Route::prefix('printers')->group(function () {

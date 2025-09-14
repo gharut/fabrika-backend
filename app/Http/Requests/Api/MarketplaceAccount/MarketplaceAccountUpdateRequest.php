@@ -18,7 +18,7 @@ class MarketplaceAccountUpdateRequest extends FormRequest
             'platform'       => ['sometimes', new Enum(Marketplace::class)],
             'name'           => ['sometimes', 'string', 'max:150'],
             'api_token_enc'  => ['sometimes', 'string'],
-            'status'         => ['sometimes', 'string', 'max:50'],
+            'status'         => ['sometimes', new Enum(MarketplaceAccountStatus::class), 'max:50'],
             'error_message'  => ['sometimes', 'string', 'nullable'],
             'last_checked_at'=> ['sometimes', 'date'],
         ];

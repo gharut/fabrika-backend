@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Приглашение в систему</title>
+    <title>Приглашение</title>
     <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
@@ -16,7 +16,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h2>Приглашение в систему</h2>
+            <h2>Приглашение</h2>
         </div>
         
         <div class="content">
@@ -24,7 +24,7 @@
             
             <p>Вы были приглашены присоединиться к клиенту <strong>{{ $clientName }}</strong>.</p>
             
-            <p>Для завершения регистрации  нажмите на кнопку ниже:</p>
+            <p>Для завершения нажмите на кнопку ниже:</p>
             
             <p style="text-align: center; margin: 30px 0;">
                 <a href="{{ $acceptUrl }}" class="button">Принять приглашение</a>
