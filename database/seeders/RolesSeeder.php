@@ -16,22 +16,22 @@ class RolesSeeder extends Seeder
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
         
         $user = Role::firstOrCreate(
-            ['name' => 'user', 'guard_name' => 'api', 'client_id' => $clientId],
+            ['name' => 'user', 'guard_name' => 'api',],
             ['visible_name' => 'Пользователь']
         );
 
         $admin = Role::firstOrCreate(
-            ['name' => 'admin', 'guard_name' => 'api', 'client_id' => $clientId],
+            ['name' => 'admin', 'guard_name' => 'api',],
             ['visible_name' => 'Администратор']
         );
 
         $manager = Role::firstOrCreate(
-            ['name' => 'manager', 'guard_name' => 'api', 'client_id' => $clientId],
+            ['name' => 'manager', 'guard_name' => 'api',],
             ['visible_name' => 'Менеджер']
         );
 
         $logistics = Role::firstOrCreate(
-            ['name' => 'logistics', 'guard_name' => 'api', 'client_id' => $clientId],
+            ['name' => 'logistics', 'guard_name' => 'api',],
             ['visible_name' => 'Логист']
         );
 
