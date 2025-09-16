@@ -10,8 +10,6 @@ class InvitationAcceptRequest extends FormRequest
     {
         return [
             'token' => ['required','string','size:64'],
-            'name' => ['nullable','string','max:100'],
-            'password' => ['nullable','string','min:8','max:100'],
         ];
     }
 }

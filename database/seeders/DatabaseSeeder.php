@@ -13,7 +13,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            CreateSuperAdmin::class,
+            BootstrapAdminSeeder::class,
             PermissionSeeder::class,
             LabelTemplateSeeder::class,
             RolesSeeder::class,

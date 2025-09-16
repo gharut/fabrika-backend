@@ -13,6 +13,7 @@ use App\Models\ProductSize;
 use App\Models\Client;
 use App\Models\Brand;
 use App\Models\ProductImage;
+use App\Models\MarketplaceAccount;
 use App\Enums\ProductCategory;
 
 use Carbon\Carbon;
@@ -90,7 +91,7 @@ class WbService
                 return $result;
             }
 
-            $token = $marketplaceAccount->wb_api_token;
+            $token = $marketplaceAccount->api_token_enc;
             if (empty($token)) {
                 $result['value'] = "WB API токен не настроен для аккаунта {$marketplaceAccount->name}";
                 return $result;

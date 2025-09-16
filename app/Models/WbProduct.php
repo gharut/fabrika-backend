@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use App\Enums\ProductCategory;
 use App\Models\Concerns\BelongsToClient;
 
@@ -33,6 +34,11 @@ class WbProduct extends Model
         'category' => ProductCategory::class,
     ];
 
+    public function tags(): MorphToMany
+    {
+        return $this->morphToMany(Tag::class, 'taggable');
+    }
+    
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);

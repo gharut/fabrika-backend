@@ -25,12 +25,11 @@ class User extends Authenticatable
         'name',
         'address',
         'phone',
-        'avatar'
-
-
+        'avatar',
+        'telegram',
     ];
 
-    protected array $guard_name = ['api', 'web'];
+    protected string $guard_name = 'api';
 
     /**
      * The attributes that should be hidden for serialization.
@@ -52,6 +51,13 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+    protected $appends = ['role'];
+
+    public function getRoleAttribute()
+    {
+        return $this->roles()->first();
+    }
+    
     public function clientUsers()
     {
         return $this->hasMany(ClientUser::class, 'user_id');

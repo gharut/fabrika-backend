@@ -51,10 +51,14 @@ class InvitationController extends Controller
         return response()->json(['status'=>'ok']);
     }
 
-    // Принятие приглашения по токену
     public function accept(InvitationAcceptRequest $request)
     {
-        $user = $this->service->accept($request->string('token'), $request->validated());
-        return response()->json(['status'=>'accepted','user_id'=>$user->id]);
+        $token = $request->string('token'); 
+        $result = $this->service->accept($token);
+
+        return response()->json([
+            'success' => $result['success'] ?? false,
+            'message' => $result['message'] ?? ''
+        ]);
     }
 }

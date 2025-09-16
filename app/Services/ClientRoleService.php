@@ -1,44 +1,27 @@
 <?php
 
-namespace Database\Seeders;
+namespace App\Services;
 
-use Illuminate\Database\Seeder;
+use App\Models\Client;
 use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
 
-class RolesSeeder extends Seeder
+class ClientRoleService
 {
-    public function run(): void
+    public function createDefaultRoles(Client $client): void
     {
-        $clientId = 1;
-
-        app()[\Spatie\Permission\PermissionRegistrar::class]->setPermissionsTeamId($clientId);
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
-        
-        $user = Role::firstOrCreate(
-            ['name' => 'user', 'guard_name' => 'api', 'client_id' => $clientId],
-            ['visible_name' => 'Пользователь']
-        );
+        app(PermissionRegistrar::class)->setPermissionsTeamId($client->id);
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         $admin = Role::firstOrCreate(
-            ['name' => 'admin', 'guard_name' => 'api', 'client_id' => $clientId],
+            ['name' => 'admin', 'guard_name' => 'api', 'client_id' => $client->id],
             ['visible_name' => 'Администратор']
-        );
-
-        $manager = Role::firstOrCreate(
-            ['name' => 'manager', 'guard_name' => 'api', 'client_id' => $clientId],
-            ['visible_name' => 'Менеджер']
-        );
-
-        $logistics = Role::firstOrCreate(
-            ['name' => 'logistics', 'guard_name' => 'api', 'client_id' => $clientId],
-            ['visible_name' => 'Логист']
         );
 
         $admin->givePermissionTo([
             'view-products', 'create-products', 'edit-products', 'delete-products',
             'view-clients', 'create-clients', 'edit-clients', 'delete-clients',
-            'view-marketplace-accounts', 'create-marketplace-accounts', 
+            'view-marketplace-accounts', 'create-marketplace-accounts',
             'edit-marketplace-accounts', 'delete-marketplace-accounts', 'check-connection',
             'manage-invitations', 'view-cz', 'download-pdf-cz',
             'import-wb-product', 'import-cz', 'defective-cz', 'replace-size-cz',
@@ -46,11 +29,16 @@ class RolesSeeder extends Seeder
             'view-brands', 'create-brands', 'edit-brands', 'delete-brands',
             'list-users', 'get-users',
         ]);
-        
+
+        $manager = Role::firstOrCreate(
+            ['name' => 'manager', 'guard_name' => 'api', 'client_id' => $client->id],
+            ['visible_name' => 'Менеджер']
+        );
+
         $manager->givePermissionTo([
             'view-products', 'create-products', 'edit-products', 'delete-products',
             'view-clients', 'create-clients', 'edit-clients', 'delete-clients',
-            'view-marketplace-accounts', 'create-marketplace-accounts', 
+            'view-marketplace-accounts', 'create-marketplace-accounts',
             'edit-marketplace-accounts', 'delete-marketplace-accounts', 'check-connection',
             'import-wb-product', 'view-cz', 'download-pdf-cz',
             'import-cz', 'defective-cz', 'replace-size-cz',
@@ -58,7 +46,16 @@ class RolesSeeder extends Seeder
             'view-brands', 'create-brands', 'edit-brands', 'delete-brands',
             'list-users', 'get-users',
         ]);
-        
-        $logistics->givePermissionTo(['view-products', 'view-product-sizes', 'view-brands', 'view-cz', 'download-pdf-cz', 'list-users', 'get-users',]);
+
+        $logistics = Role::firstOrCreate(
+            ['name' => 'logistics', 'guard_name' => 'api', 'client_id' => $client->id],
+            ['visible_name' => 'Логист']
+        );
+
+        $logistics->givePermissionTo([
+            'view-products', 'view-product-sizes', 'view-brands',
+            'view-cz', 'download-pdf-cz',
+            'list-users', 'get-users',
+        ]);
     }
 }

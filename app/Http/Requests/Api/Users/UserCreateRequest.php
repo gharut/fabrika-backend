@@ -33,6 +33,7 @@ class UserCreateRequest extends FormRequest
             'name' => 'required|string|max:255',
             'email' => 'required|unique:users|email',
             'phone' => '',
+            'telegram' => ['nullable', 'string', 'max:50'],
             'address' => '',
             'role' => 'exists:roles,id',
         ];

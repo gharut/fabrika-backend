@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('chestny_znak_labels', function (Blueprint $table) {
             $table->id();
             $table->foreignId('size_id')->constrained('product_sizes')->restrictOnDelete();
+            $table->foreignId('client_id')->constrained('clients')->restrictOnDelete();
             $table->string('code')->unique();
             $table->boolean('used')->default(false);
             $table->foreignId('used_by')->nullable()->constrained('users')->restrictOnDelete();

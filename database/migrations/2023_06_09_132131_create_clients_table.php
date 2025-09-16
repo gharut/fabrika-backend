@@ -18,6 +18,9 @@ return new class extends Migration
             $table->string("phone");
             $table->string("email");
             $table->json("details")->nullable()->comment("[{key, value}]");
+            $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('restrict');
+            $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('restrict');
+            $table->foreignId('owner_id')->nullable()->constrained('users')->onDelete('restrict');
             $table->timestamps();
             $table->softDeletes();
         });

@@ -35,6 +35,7 @@ class UserUpdateRequest extends FormRequest
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,'.$this->user->id.',id',
             'phone' => '',
+            'telegram' => ['sometimes', 'string', 'max:50'],
             'address' => '',
             'role' => 'exists:roles,id',
         ];

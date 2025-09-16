@@ -6,15 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Tags\TagCreateRequest;
 use App\Http\Requests\Api\Tags\TagUpdateRequest;
 use App\Models\Tag;
+use App\Services\TagService;
 use Illuminate\Http\JsonResponse;
-
 
 class TagsController extends Controller
 {
+    public function __construct(
+        private readonly TagService $service
+    ) {}
 
     public function get(Tag $tag): JsonResponse
     {
-        $tag->load(['consumables','suppliers']);
         return response()->json([
             'success' => true,
             'data' => $tag,
@@ -23,65 +25,41 @@ class TagsController extends Controller
 
     public function list(): JsonResponse
     {
-        $tags = Tag::all()->keyBy('id');;
+        $tags = $this->service->list();
 
-        return response()->json($tags);
-    }
-
-    public function listWithCounts(): JsonResponse
-    {
-        $tags = Tag::query()->withCount(['consumables', 'suppliers'])->get();
-        return response()->json($tags);
-    }
-
-    public function listSuppliers(Tag $tag): JsonResponse
-    {
         return response()->json([
             'success' => true,
-            'data' => $tag->load("suppliers")
+            'data' => $tags,
         ]);
     }
 
-    public function listConsumables(Tag $tag): JsonResponse
+    public function store(TagCreateRequest $request): JsonResponse
     {
+        $tag = $this->service->create($request->validated());
+
         return response()->json([
             'success' => true,
-            'data' => $tag->load("consumables")
-        ]);
+            'data' => $tag,
+            'message' => 'Тег успешно создан',
+        ], 201);
     }
 
-    public function store(TagCreateRequest $request)
+    public function update(TagUpdateRequest $request, Tag $tag): JsonResponse
     {
-        $tag = new Tag();
-        $tag->fill($request->only(['name', 'type']));
-        $saved = $tag->save();
-        if($saved) {
-            $tag->loadCount(['consumables', 'suppliers']);
-        }
+        $updated = $this->service->update($tag, $request->validated());
 
         return response()->json([
-            'success' => $saved,
-            'data' => $saved ? $tag : [],
-        ]);
-    }
-
-    public function update(TagUpdateRequest $request, Tag $tag) {
-        $tag->fill($request->only(['name', 'slug', 'type']));
-        $saved = $tag->save();
-        return response()->json([
-            'success' => $saved,
-            'data' => $saved ? $tag->loadCount(['consumables', 'suppliers']) : [],
+            'success' => true,
+            'data' => $updated,
         ]);
     }
 
     public function destroy(Tag $tag): JsonResponse
     {
-        $tag->consumables()->detach();
-        $tag->suppliers()->detach();
+        $this->service->delete($tag);
 
         return response()->json([
-            'success' => $tag->delete()
+            'success' => true,
         ]);
     }
-
 }

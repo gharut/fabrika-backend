@@ -19,7 +19,8 @@ class TagCreateRequest extends FormRequest
      */
     public function authorize(User $user): bool
     {
-        return Auth::user()->can('add-tags');
+        // return Auth::user()->can('add-tags');
+        return true;
     }
 
     /**
@@ -30,8 +31,11 @@ class TagCreateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|unique:tags',
-            'type' => ['required', new Enum(TagType::class)],
+            // 'name' => 'required|unique:tags',
+            // 'type' => ['required', new Enum(TagType::class)],
+            'name' => ['required', 'string', 'max:255'],
+            'type' => ['required', 'in:system,custom'],
+            'color' => ['required', 'string', 'max:50'],
         ];
     }
 

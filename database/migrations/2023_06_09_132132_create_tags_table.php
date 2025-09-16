@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string("name");
             $table->string("type");
+            $table->string('color')->default('primary');
+            $table->foreignId('client_id')->constrained('clients')->cascadeOnDelete();
             $table->timestamps();
         });
     }

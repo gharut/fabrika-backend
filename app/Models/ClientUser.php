@@ -9,7 +9,6 @@ class ClientUser extends Model
     protected $fillable = [
         'client_id',
         'user_id',
-        'role_id',
     ];
 
     public function client()
@@ -20,10 +19,5 @@ class ClientUser extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function role()
-    {
-        return $this->belongsTo(Role::class);
     }
 }

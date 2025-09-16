@@ -31,7 +31,10 @@ class ClientUserController extends Controller
 
     public function show($id): JsonResponse
     {
-        $clientUser = ClientUser::with(['client', 'user', 'role'])->find($id);        
+        $clientUser = ClientUser::with(['client', 'user'])->find($id);
+        if ($clientUser) {
+            $clientUser->user->load('roles');
+        }
         return response()->json($clientUser);
     }
 

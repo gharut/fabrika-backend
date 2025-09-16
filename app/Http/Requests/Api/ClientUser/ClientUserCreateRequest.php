@@ -16,7 +16,7 @@ class ClientUserCreateRequest extends FormRequest
         return [
             'client_id' => ['required', 'exists:clients,id'],
             'user_id'   => ['required', 'exists:users,id'],
-            'role_id'   => ['required', 'exists:roles,id'],
+            'role'      => ['required', 'exists:roles,id'],
         ];
     }
 }

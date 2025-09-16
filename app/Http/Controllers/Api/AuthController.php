@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Client;
 use App\Models\ClientUser;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 use App\Http\Requests\Api\Profile\ProfileUpdateRequest;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -19,10 +21,13 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use App\Mail\PasswordResetMail;
+use App\Support\ClientContext;
+// use App\Services\ClientRoleService;
 
 class AuthController extends Controller
 {
-    // public function register(ProfileUpdateRequest $request)
+    public function __construct(private ClientContext $clientContext) {}
+
     public function register(RegisterRequest $request)
     {
         $user = User::create([
@@ -30,8 +35,9 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password)
         ]);
-        $user->assignRole('user');
+
         $token = $user->createToken('auth_token')->plainTextToken;
+
         $client = Client::create([
             'name' => 'Новая организация',
             'email' => $request->email,
@@ -41,11 +47,20 @@ class AuthController extends Controller
             'owner_id' => $user->id,
         ]);
 
-        $clientUser = ClientUser::create([
+        ClientUser::create([
             'user_id' => $user->id,
             'client_id' => $client->id,
-            'role_id' => 3,
         ]);
+
+        // app(ClientRoleService::class)->createDefaultRoles($client);
+
+        app(PermissionRegistrar::class)->setPermissionsTeamId($client->id);
+
+        $adminRole = Role::where('name', 'admin')
+            ->where('guard_name', 'api')
+            ->firstOrFail();
+
+        $user->assignRole($adminRole);
 
         return response()->json([
             'access_token' => $token,
@@ -67,13 +82,15 @@ class AuthController extends Controller
             'roles:name,visible_name',
             'permissions:name'
         ])->where('email', $request['email'])->firstOrFail();
+        $clientId = $user->clientUsers()->pluck('client_id')->first();
+        app(PermissionRegistrar::class)->setPermissionsTeamId($clientId);
 
         $token = $user->createToken('auth_token')->plainTextToken;
-
         $user->role = $user->roles->first();
 
         return response()->json([
             'success' => true,
+            'clientId' => $clientId,
             'data' => array_merge([
                 'access_token' => $token,
                 'token_type' => 'Bearer',

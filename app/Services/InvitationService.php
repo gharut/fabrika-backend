@@ -2,24 +2,43 @@
 
 namespace App\Services;
 
-use App\Models\Invitation;
 use App\Models\User;
+use App\Models\Role;
+use App\Models\Invitation;
+use App\Mail\InvitationMail;
+
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\InvitationMail;
+use Illuminate\Support\Facades\Auth;
+
+use Spatie\Permission\PermissionRegistrar;
 
 class InvitationService
 {
-    public function accept(string $token, array $payload): User
-    {
-        $inv = Invitation::where('token', $token)->firstOrFail();
-        if (!$inv->isActive()) abort(410, 'Приглашение недействительно');
+    public function accept(string $token): array
+    {   
+        $user = Auth::user();
+        $inv = Invitation::where('token', $token)->first();
+        
+        if (!$inv || ($inv->email !== $user->email)) {
+            return [
+                'success' => false,
+                'message' => 'Приглашение не найдено'
+            ];
+        }
 
-        return DB::transaction(function () use ($inv, $payload) {
+        if (!$inv->isActive()) {
+            return [
+                'success' => false,
+                'message' => 'Приглашение недействительно'
+            ];
+        }
+
+        return DB::transaction(function () use ($inv) {
             $user = User::where('email', $inv->email)->first();
             
             $existingClientUser = DB::table('client_users')
@@ -28,50 +47,46 @@ class InvitationService
                 ->first();
                 
             if ($existingClientUser) {
-                abort(409, 'Пользователь уже добавлен в эту организацию');
-            }
-
-            if (!$user) {
-                if (empty($payload['password'])) {
-                    abort(422, 'Пароль обязателен для нового пользователя');
-                }
-
-                $user = User::create([
-                    'name'     => $payload['name'] ?? explode('@', $inv->email)[0],
-                    'email'    => $inv->email,
-                    'password' => Hash::make($payload['password']),
-                ]);
-
-                $user->assignRole('user');
+                return [
+                    'success' => false,
+                    'message' => 'Пользователь уже добавлен в эту организацию'
+                ];
             }
 
             DB::table('client_users')->upsert([[
                 'client_id' => $inv->client_id,
                 'user_id'   => $user->id,
-                'role_id'   => $inv->role_id,
                 'created_at'=> now(),
                 'updated_at'=> now(),
-            ]], uniqueBy: ['client_id','user_id'], update: ['role_id','updated_at']);
+            ]], uniqueBy: ['client_id','user_id'], update: ['updated_at']);
+            $role = Role::findOrFail($inv->role_id);
+            app(PermissionRegistrar::class)->setPermissionsTeamId($inv->client_id);
+            $user->syncRoles([$role->name]);
 
             $inv->accepted_at = now();
             $inv->save();
 
-            return $user;
+            return [
+                'success' => true,
+                'message' => 'Приглашение принято'
+            ];
         });
     }
 
     public function create(int $clientId, int $inviterId, string $email, int $roleId, ?array $meta = null): array
     {
+        $role = Role::findOrFail($roleId);
         $email = mb_strtolower($email);
         $user = User::where('email', $email)->first();
-        
+        $isNewUser = !$user;
+
         if ($user) {
-            $existingClientUser = DB::table('client_users')
+            $exists = DB::table('client_users')
                 ->where('client_id', $clientId)
                 ->where('user_id', $user->id)
-                ->first();
-                
-            if ($existingClientUser) {
+                ->exists();
+
+            if ($exists) {
                 return [
                     'message' => 'Пользователь уже добавлен в эту организацию',
                     'mail_sent' => false,
@@ -98,11 +113,12 @@ class InvitationService
 
         $result = [
             'message' => '',
-            'status' => 'invitation_created'
+            'status' => 'invitation_created',
+            'mail_sent' => false
         ];
 
         try {
-            Mail::to($inv->email)->send(new InvitationMail($inv));
+            Mail::to($inv->email)->send(new InvitationMail($inv, $isNewUser));
             $result['message'] = $user 
                 ? 'Приглашение отправлено существующему пользователю' 
                 : 'Приглашение отправлено новому пользователю';

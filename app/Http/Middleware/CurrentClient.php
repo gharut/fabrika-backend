@@ -7,6 +7,7 @@ use App\Support\ClientContext;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Spatie\Permission\PermissionRegistrar;
 
 class CurrentClient
 {
@@ -15,15 +16,12 @@ class CurrentClient
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
-        
         if (!$user) {
             abort(401, 'Unauthenticated');
         }
 
-        if ($user->hasRole('super-admin')) {
-            return $next($request);
-        }
-        
+        $isSuper = $user->hasRole('super-admin');
+
         // Получаем client_id из разных источников
         $clientId = $request->header('X-Client-Id') 
             ?? $request->route('client_id') 
@@ -41,32 +39,34 @@ class CurrentClient
                 return response()->json([
                     'message' => 'Client ID is required',
                     'available_client_ids' => $clientIds,
-                    'endpoint' => '/api/user/clients' // Эндпоинт для получения клиентов
+                    'endpoint' => '/api/user/clients'
                 ], 400);
-            } else {
+            } elseif (!$isSuper) {
                 abort(403, 'User is not associated with any client');
             }
         }
 
-        // Проверяем принадлежность пользователя к клиенту
-        $isMember = ClientUser::where('client_id', $clientId)
-            ->where('user_id', $user->id)
-            ->exists();
+        // Проверка членства (супер-админ может обойти)
+        if (!$isSuper) {
+            $isMember = ClientUser::where('client_id', $clientId)
+                ->where('user_id', $user->id)
+                ->exists();
 
-        if (!$isMember) {
-            return response()->json([
-                'message' => 'You are not a member of this client',
-            ], 403);
+            if (!$isMember) {
+                return response()->json([
+                    'message' => 'You are not a member of this client',
+                ], 403);
+            }
         }
 
-        // Устанавливаем контекст
-        $this->clientContext->set((int)$clientId);
+        $this->clientContext->set($clientId ? (int)$clientId : null);
         $request->attributes->set('client_id', $clientId);
+        app(PermissionRegistrar::class)->setPermissionsTeamId($clientId);
 
         // Обновляем последний выбранный клиент
-        if ($user->last_selected_client_id !== $clientId) {
-            $user->update(['last_selected_client_id' => $clientId]);
-        }
+        // if ($clientId && $user->last_selected_client_id !== $clientId) {
+        //     $user->update(['last_selected_client_id' => $clientId]);
+        // }
 
         return $next($request);
     }

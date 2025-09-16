@@ -16,14 +16,14 @@ class PermissionSeeder extends Seeder
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // create permissions for suppliers
+        // create permissions for Suppliers
         Permission::create(['name' => 'list-suppliers', 'visible_name' => 'Страница поставщиков', 'category' => 'SUPPLIER']);
         Permission::create(['name' => 'get-suppliers', 'visible_name' => 'Просматривать поставщика', 'category' => 'SUPPLIER']);
         Permission::create(['name' => 'create-suppliers', 'visible_name' => 'Создавать поставщика', 'category' => 'SUPPLIER']);
         Permission::create(['name' => 'edit-suppliers', 'visible_name' => 'Редактировать поставщика', 'category' => 'SUPPLIER']);
         Permission::create(['name' => 'delete-suppliers', 'visible_name' => 'Удалять поставщика', 'category' => 'SUPPLIER']);
 
-        // create permissions for tags
+        // create permissions for Tags
         Permission::create(['name' => 'list-tags', 'visible_name' => 'Страница категорий', 'category' => 'TAGS']);
         Permission::create(['name' => 'get-tags', 'visible_name' => 'Просматривать категории', 'category' => 'TAGS']);
         Permission::create(['name' => 'create-tags', 'visible_name' => 'Создавать категории', 'category' => 'TAGS']);
@@ -38,13 +38,13 @@ class PermissionSeeder extends Seeder
         Permission::create(['name' => 'delete-users', 'visible_name' => 'Удалять пользователя', 'category' => 'USERS']);
 
         // create permissions for Roles
-        Permission::create(['name' => 'list-roles', 'visible_name' => 'Страница ролей', 'category' => 'ROLES']);
-        Permission::create(['name' => 'get-roles', 'visible_name' => 'Просматривать роли', 'category' => 'ROLES']);
+        Permission::create(['name' => 'list-roles', 'visible_name' => 'Список ролей', 'category' => 'ROLES']);
+        Permission::create(['name' => 'get-roles', 'visible_name' => 'Просматривать роль', 'category' => 'ROLES']);
         Permission::create(['name' => 'create-roles', 'visible_name' => 'Создавать роли', 'category' => 'ROLES']);
         Permission::create(['name' => 'edit-roles', 'visible_name' => 'Редактировать роли', 'category' => 'ROLES']);
         Permission::create(['name' => 'delete-roles', 'visible_name' => 'Удалять роли', 'category' => 'ROLES']);
-        
-        // create permissions for Users
+
+        // create permissions for Clients
         Permission::create(['name' => 'view-clients', 'visible_name' => 'Просматривать клиента', 'category' => 'CLIENTS']);
         Permission::create(['name' => 'create-clients', 'visible_name' => 'Создавать клиента', 'category' => 'CLIENTS']);
         Permission::create(['name' => 'edit-clients', 'visible_name' => 'Редактировать клиента', 'category' => 'CLIENTS']);
@@ -56,15 +56,34 @@ class PermissionSeeder extends Seeder
         Permission::create(['name' => 'create-products', 'visible_name' => 'Создавать товар', 'category' => 'PRODUCTS']);
         Permission::create(['name' => 'delete-products', 'visible_name' => 'Удалять товар', 'category' => 'PRODUCTS']);
 
+        // create permissions for ProductSizes
+        Permission::create(['name' => 'view-product-sizes', 'visible_name' => 'Просматривать размеры товаров', 'category' => 'PRODUCT_SIZES']);
+        Permission::create(['name' => 'create-product-sizes', 'visible_name' => 'Создавать размеры товаров', 'category' => 'PRODUCT_SIZES']);
+        Permission::create(['name' => 'edit-product-sizes', 'visible_name' => 'Редактировать размеры товаров', 'category' => 'PRODUCT_SIZES']);
+        Permission::create(['name' => 'delete-product-sizes', 'visible_name' => 'Удалять размеры товаров', 'category' => 'PRODUCT_SIZES']);
+
+        // create permissions for Brands
+        Permission::create(['name' => 'view-brands', 'visible_name' => 'Просматривать бренды', 'category' => 'BRANDS']);
+        Permission::create(['name' => 'create-brands', 'visible_name' => 'Создавать бренды', 'category' => 'BRANDS']);
+        Permission::create(['name' => 'edit-brands', 'visible_name' => 'Редактировать бренды', 'category' => 'BRANDS']);
+        Permission::create(['name' => 'delete-brands', 'visible_name' => 'Удалять бренды', 'category' => 'BRANDS']);
+
         // create permissions for MarketplaceAccount
         Permission::create(['name' => 'view-marketplace-accounts', 'visible_name' => 'Просматривать подключения к маркетплейсам', 'category' => 'MARKETPLACE_ACCOUNTS']);
         Permission::create(['name' => 'edit-marketplace-accounts', 'visible_name' => 'Редактировать подключения к маркетплейсам', 'category' => 'MARKETPLACE_ACCOUNTS']);
         Permission::create(['name' => 'create-marketplace-accounts', 'visible_name' => 'Создавать подключения к маркетплейсам', 'category' => 'MARKETPLACE_ACCOUNTS']);
         Permission::create(['name' => 'delete-marketplace-accounts', 'visible_name' => 'Удалять подключения к маркетплейсам', 'category' => 'MARKETPLACE_ACCOUNTS']);
+        Permission::create(['name' => 'check-connection', 'visible_name' => 'Проверять подключение к маркетплейсам', 'category' => 'MARKETPLACE_ACCOUNTS']);
         
         // create permissions for Invitations
         Permission::create(['name' => 'manage-invitations', 'visible_name' => 'Управлять приглашениями', 'category' => 'INVITATIONS']);
         
+        // create permissions for Labels
+        Permission::create(['name' => 'view-labels', 'visible_name' => 'Просматривать этикетки', 'category' => 'LABELS']);
+        Permission::create(['name' => 'create-labels', 'visible_name' => 'Создавать этикетки', 'category' => 'LABELS']);
+        Permission::create(['name' => 'edit-labels', 'visible_name' => 'Редактировать этикетки', 'category' => 'LABELS']);
+        Permission::create(['name' => 'delete-labels', 'visible_name' => 'Удалять этикетки', 'category' => 'LABELS']);
+
         // create permissions for WB
         Permission::create(['name' => 'import-wb-product', 'visible_name' => 'Импорт товаров с WB', 'category' => 'WB']);
 
