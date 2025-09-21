@@ -5,6 +5,7 @@ namespace App\Services\Wb;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 use App\Services\WbProductService;
 
@@ -15,6 +16,8 @@ use App\Models\Brand;
 use App\Models\ProductImage;
 use App\Models\MarketplaceAccount;
 use App\Enums\ProductCategory;
+use App\Models\MarketplaceCategory;
+use App\Models\ProductMarketplaceCategory;
 
 use Carbon\Carbon;
 
@@ -219,7 +222,6 @@ class WbService
                     'article' => $nmID,
                     'composition' => $characteristics['composition'] ?? '',
                     'has_chestny_znak' =>  false,
-                    'category' => ProductCategory::CLOTHES,
                     'brand_id' => $brandId,
                 ];
 
@@ -234,6 +236,11 @@ class WbService
                 } else {
                     $product = $this->wbProductService->create($productData);
                     $result['statistics']['products_created']++;
+                }
+                
+                $catId = $this->ensureWbCategory($card, 'ru');
+                if ($catId) {
+                    $this->linkProductToMarketplaceCategory($product->id, 'wb', $catId);
                 }
 
                 if (!empty($card['photos']) && is_array($card['photos'])) {
@@ -371,5 +378,46 @@ class WbService
         }
         
         return $result;
+    }
+
+    protected function ensureWbCategory(array $card, string $locale = 'ru'): ?int
+    {
+        $subjectID   = isset($card['subjectID']) ? (string)$card['subjectID'] : null;
+        $subjectName = $card['subjectName'] ?? null;
+
+        if (!$subjectID || !$subjectName) {
+            return null;
+        }
+
+        $cat = MarketplaceCategory::query()
+            ->where('marketplace_code', 'wb')
+            ->where('external_id', $subjectID)
+            ->first();
+
+        if ($cat) {
+            if ($cat->name !== $subjectName) {
+                $cat->update(['name' => $subjectName]);
+            }
+            return (int)$cat->id;
+        }
+
+        $created = MarketplaceCategory::create([
+            'marketplace_code'   => 'wb',
+            'external_id'        => $subjectID,
+            'name'               => $subjectName,
+            // TO DO: Добавить родителя
+            'parent_id'          => null,
+            'parent_external_id' => null,
+        ]);
+
+        return (int)$created->id;
+    }
+
+    protected function linkProductToMarketplaceCategory(int $productId, string $marketplaceCode, int $marketplaceCategoryId): void
+    {
+        ProductMarketplaceCategory::updateOrCreate(
+            ['product_id' => $productId, 'marketplace_code' => $marketplaceCode],
+            ['marketplace_category_id' => $marketplaceCategoryId]
+        );
     }
 }

@@ -11,6 +11,7 @@ use App\Http\Requests\Api\WbProduct\WbProductUpdateRequest;
 use Illuminate\Validation\ValidationException;
 use App\Enums\ProductCategory;
 use Illuminate\Validation\Rule;
+use App\Models\WbProduct;
 
 class WbProductController extends Controller
 {
@@ -41,8 +42,10 @@ class WbProductController extends Controller
         $filters = $request->input('filters', []);
         $sortBy = $request->input('sort_by', 'id');
         $sortDir = $request->input('sort_dir', 'desc');
+        $perPage = $request->input('per_page', 15);
+        $page = $request->input('page', 1);
 
-        $result = $this->service->getAllWithSizes($filters, $sortBy, $sortDir);
+        $result = $this->service->getAllWithSizes($filters, $sortBy, $sortDir, $perPage, $page);
         return response()->json($result);
     }
 
@@ -63,11 +66,23 @@ class WbProductController extends Controller
 
     public function update(WbProductUpdateRequest $request, int $id): JsonResponse
     {
-        $data = $request->validated();
-        $wbProduct = $this->service->update($id, $data);
-        
-        $wbProduct->refresh();
-        return response()->json($wbProduct->load(['client', 'brand']));
+        try {
+            $data = $request->validated();
+
+            $updatedProduct = $this->service->update($id, $data);
+
+            return response()->json([
+                'success' => true,
+                'data' => $updatedProduct
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Произошла ошибка при обновлении товара',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
     }
 
     public function destroy(int $id): JsonResponse

@@ -4,6 +4,9 @@ namespace App\Services;
 
 use App\Models\WbProduct;
 use App\Models\Label;
+use App\Models\ProductImage;
+use App\Models\ProductMarketplaceCategory;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -29,51 +32,71 @@ class WbProductService
         return $query->get();
     }
     
-    public function getAllWithSizes(array $filters, string $sortBy, string $sortDir): Collection
+    public function getAllWithSizes(
+        array $filters,
+        string $sortBy,
+        string $sortDir,
+        int $perPage = 15,
+        int $page = 1
+    ): LengthAwarePaginator
     {
-        $query = WbProduct::with([
-            'client',
-            'brand',
-            'labels',
-            'tags',
-            'sizes' => fn($q) =>
-                $q->select('id', 'product_id', 'barcode', 'value')
-                ->withCount([
-                    'chestnyZnakLabels as available_labels_count' => fn($q) =>
-                        $q->where('used', false)
-                ])
-        ]);
+        $sortDir = in_array(strtolower($sortDir), ['asc','desc']) ? $sortDir : 'asc';
+
+        $query = WbProduct::query()
+            ->with([
+                'client',
+                'brand',
+                'labels',
+                'tags',
+                'sizes' => fn($q) => $q->select('id','product_id','barcode','value')
+                    ->withCount([
+                        'chestnyZnakLabels as available_labels_count' => fn($q) => $q->where('used', false)
+                    ]),
+                'wbCategoryLink.category',
+            ])
+            ->addSelect([
+                'main_image_url' => ProductImage::select('url')
+                    ->whereColumn('product_id', 'wb_products.id')
+                    ->orderBy('position')
+                    ->limit(1)
+            ]);
 
         $applyFilter = function ($q, $filter) use (&$applyFilter) {
             $field = $filter['field'] ?? null;
-            $op = $filter['op'] ?? 'eq';
+            $op    = $filter['op'] ?? 'eq';
             $value = $filter['value'] ?? null;
-
             if (!$field || $value === null) return;
 
-            switch ($op) {
-                case 'eq': $q->where($field, '=', $value); break;
-                case 'ne': $q->where($field, '!=', $value); break;
-                case 'like': $q->where($field, 'like', '%' . $value . '%'); break;
+            // Специальная обработка для фильтрации по категории
+            if ($field === 'category' || $field === 'wb_category') {
+                $q->whereHas('wbCategoryLink.category', function ($categoryQuery) use ($op, $value) {
+                    switch ($op) {
+                        case 'eq':   $categoryQuery->where('name', '=', $value); break;
+                        case 'ne':   $categoryQuery->where('name', '!=', $value); break;
+                        case 'like': $categoryQuery->where('name', 'like', '%'.$value.'%'); break;
+                        case 'in':   $categoryQuery->whereIn('name', (array)$value); break;
+                        default:     $categoryQuery->where('name', '=', $value); break;
+                    }
+                });
+            } else {
+                // Обычная фильтрация по другим полям
+                switch ($op) {
+                    case 'eq':   $q->where($field, '=', $value); break;
+                    case 'ne':   $q->where($field, '!=', $value); break;
+                    case 'like': $q->where($field, 'like', '%'.$value.'%'); break;
+                    case 'in':   $q->whereIn($field, (array)$value); break;
+                }
             }
         };
 
         foreach ($filters as $filter) {
-            if (isset($filter['group']) && isset($filter['filters'])) {
+            if (isset($filter['group'], $filter['filters'])) {
                 $group = strtolower($filter['group']);
-                $subFilters = $filter['filters'];
-
-                $query->where(function ($q) use ($subFilters, $group, $applyFilter) {
-                    foreach ($subFilters as $i => $subFilter) {
-                        if ($group === 'or' && $i === 0) {
-                            $applyFilter($q, $subFilter);
-                        } elseif ($group === 'or') {
-                            $q->orWhere(function ($sq) use ($subFilter, $applyFilter) {
-                                $applyFilter($sq, $subFilter);
-                            });
-                        } else {
-                            $applyFilter($q, $subFilter);
-                        }
+                $sub   = $filter['filters'];
+                $query->where(function ($q) use ($sub, $group, $applyFilter) {
+                    foreach ($sub as $i => $sf) {
+                        if ($group === 'or' && $i > 0) $q->orWhere(fn($sq) => $applyFilter($sq, $sf));
+                        else                           $applyFilter($q, $sf);
                     }
                 });
             } else {
@@ -81,20 +104,19 @@ class WbProductService
             }
         }
 
-        $sortDir = in_array(strtolower($sortDir), ['asc', 'desc']) ? $sortDir : 'asc';
-        if ($sortBy === 'category') {
-            $query->orderByRaw("
-                CASE category
-                    WHEN 'clothes' THEN 'Одежда'
-                    WHEN 'shoes' THEN 'Обувь'
-                    ELSE category
-                END $sortDir
-            ");
+        if ($sortBy === 'wb_category') {
+            $query->leftJoin('product_marketplace_categories as pmc', function ($join) {
+                    $join->on('pmc.product_id', '=', 'wb_products.id')
+                        ->where('pmc.marketplace_code', '=', 'wb');
+                })
+                ->leftJoin('marketplace_categories as mc', 'mc.id', '=', 'pmc.marketplace_category_id')
+                ->select('wb_products.*')
+                ->orderBy('mc.name', $sortDir);
         } else {
             $query->orderBy($sortBy, $sortDir);
         }
 
-        return $query->get();
+        return $query->paginate($perPage, ['*'], 'page', $page);
     }
 
     public function getById(int $id): WbProduct
@@ -114,6 +136,10 @@ class WbProductService
         return DB::transaction(function () use ($data, $currentUserId) {
             $data['created_by'] = $currentUserId;
             $data['updated_by'] = $currentUserId;
+            
+            $categoryId = $data['category_id'] ?? null;
+            unset($data['category_id']);
+            
             $product = WbProduct::create($data);
             $clientName = $product->client ? $product->client->name : '';
 
@@ -125,18 +151,52 @@ class WbProductService
                 'product_id'  => $product->id,
             ]);
 
+            if ($categoryId) {
+                ProductMarketplaceCategory::create([
+                    'product_id' => $product->id,
+                    'marketplace_category_id' => $categoryId,
+                    'marketplace_code' => 'wb',
+                    'created_by' => $currentUserId,
+                    'updated_by' => $currentUserId,
+                ]);
+            }
+
             return $product;
         });
     }
 
     public function update(int $id, array $data): WbProduct
     {   
-        
-        $wbProduct = $this->getById($id);
-        $data['created_by'] = Auth::id();
-        $data['updated_by'] = Auth::id();
-        $wbProduct->update($data);
-        return $wbProduct;
+        $currentUserId = Auth::id();
+
+        return DB::transaction(function () use ($id, $data, $currentUserId) {
+            $wbProduct = $this->getById($id);
+            $data['updated_by'] = $currentUserId;
+            
+            $categoryId = $data['category_id'] ?? null;
+            unset($data['category_id']);
+                
+            $wbProduct->update($data);
+            $existingCategory = $wbProduct->wbCategories()->first();
+
+            if ($categoryId) {
+                if ($existingCategory) {
+                    $existingCategory->update([
+                        'marketplace_category_id' => $categoryId,
+                        'updated_by' => $currentUserId,
+                    ]);
+                } else {
+                    $wbProduct->wbCategories()->create([
+                        'marketplace_category_id' => $categoryId,
+                        'marketplace_code' => 'wb',
+                        'created_by' => $currentUserId,
+                        'updated_by' => $currentUserId,
+                    ]);
+                }
+            }
+
+            return $wbProduct;
+        });
     }
 
     public function delete(int $id): void

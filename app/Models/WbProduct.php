@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
-use App\Enums\ProductCategory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Models\Concerns\BelongsToClient;
 
 class WbProduct extends Model
@@ -24,16 +25,43 @@ class WbProduct extends Model
         'vendor_code',
         'composition',
         'has_chestny_znak',
-        'category',
         'created_by',
         'updated_by',
     ];
 
     protected $casts = [
         'has_chestny_znak' => 'boolean',
-        'category' => ProductCategory::class,
     ];
 
+    protected $appends = ['wb_category'];
+
+    public function wbCategoryLink(): HasOne
+    {
+        return $this->hasOne(ProductMarketplaceCategory::class, 'product_id')
+            ->where('marketplace_code', 'wb')
+            ->with(['category' => function ($q) {
+                $q->select('id','name');
+            }]);
+    }
+
+    public function wbCategories()
+    {
+        return $this->hasMany(ProductMarketplaceCategory::class, 'product_id')
+            ->where('marketplace_code', 'wb');
+    }
+
+    public function getWbCategoryAttribute(): ?array
+    {
+        if (!$this->relationLoaded('wbCategoryLink')) {
+            $this->load('wbCategoryLink.category');
+        }
+
+        $link = $this->getRelation('wbCategoryLink');
+        $cat  = $link?->category;
+
+        return $cat ? ['id' => $cat->id, 'name' => $cat->name] : null;
+    }
+    
     public function tags(): MorphToMany
     {
         return $this->morphToMany(Tag::class, 'taggable');
@@ -73,11 +101,11 @@ class WbProduct extends Model
 
     public function images()
     {
-        return $this->hasMany(ProductImage::class)->orderBy('position');
+        return $this->hasMany(ProductImage::class, 'product_id')->orderBy('position');
     }
 
     public function mainImage()
     {
-        return $this->hasOne(ProductImage::class)->orderBy('position');
+        return $this->hasOne(ProductImage::class, 'product_id')->orderBy('position');
     }
 }

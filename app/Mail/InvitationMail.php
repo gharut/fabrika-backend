@@ -17,7 +17,7 @@ class InvitationMail extends Mailable
     {
         $clientName = $this->invitation->client->name;
         $acceptUrl = env('FRONTEND_URL', 'http://localhost:3000') . 
-                   "/invite/accept?token={$this->invitation->token}" .
+                   "/invite?token={$this->invitation->token}" .
                    "&org_name=" . urlencode($clientName ?? 'Наш сервис') .
                    "&is_new=" . ($this->isNewUser ? 'true' : 'false');
         

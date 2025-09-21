@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\TaggableController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ProductSizeController;
+use App\Http\Controllers\Api\MarketplaceCategoryController;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\PermissionRegistrar;
 use Spatie\Permission\Models\Role;
@@ -43,41 +44,28 @@ Route::group([
     'middleware'=> ['auth:sanctum'],
     'namespace' => 'App\Http\Controllers\Api',
 ], function() {
-    Route::get('/client-users/clients', [ClientUserController::class, 'getClientsByUser']);
+    Route::get('client-users/clients', [ClientUserController::class, 'getClientsByUser']);
+    Route::get('profile/send-verification-email', [ProfileController::class, 'sendVerificationEmail']);
+    Route::post('profile/verify-email', [ProfileController::class, 'verifyByToken']);
 });
 
 Route::group([
     'middleware'=> ['auth:sanctum', 'current.client'],
     'namespace' => 'App\Http\Controllers\Api',
 ], function() {
-    Route::middleware(['current.client'])->get('/debug-user-permissions', function () {
-        $user = Auth::user();
-        $clientId = app(\App\Support\ClientContext::class)->id();
-
-        // // выставляем контекст клиента
-        // app(PermissionRegistrar::class)->setPermissionsTeamId($clientId);
-
-        // подгружаем роли и права именно для этого клиента
-        $user->load('roles.permissions');
-
-        return response()->json([
-            'user_id'         => $user->id,
-            'client_id'       => $clientId,
-            'roles'           => $user->roles,
-            'all_permissions' => $user->getAllPermissions()->pluck('name'),
-            'can_view_products' => $user->can('view-products'),
-        ]);
-    });
-
     Route::middleware('cper:import-wb-product')->post('wb/import-product', [\App\Http\Controllers\Api\WbController::class, 'import']);
 
     Route::post('change-password', [AuthController::class, 'changePassword']);
 
+    Route::get('/marketplace-categories', [MarketplaceCategoryController::class, 'index']);
+
     Route::get('products-img/{id}', [\App\Http\Controllers\Api\ProductImageController::class, 'all']);
     Route::get('products-img/{id}', [\App\Http\Controllers\Api\ProductImageController::class, 'main']);
     
-    Route::get('profile', [ProfileController::class, 'get']);
-    Route::put('profile', [ProfileController::class, 'update']);
+    Route::prefix('profile')->group(function () {
+        Route::get('/', [ProfileController::class, 'get']);
+        Route::put('/', [ProfileController::class, 'update']);
+    });
 
     Route::get('label-templates', [\App\Http\Controllers\Api\LabelTemplateController::class, 'index']);
     Route::post('labels-pdf/print', [\App\Http\Controllers\Api\LabelDesignerController::class, 'print']);
@@ -161,7 +149,7 @@ Route::group([
 
     Route::prefix('marketplace-accounts')->group(function () {           
         Route::middleware('cper:view-marketplace-accounts')->get('/', [MarketplaceAccountController::class, 'index']);
-        Route::middleware('cper:check-connection-marketplace-accounts')->post('check-connection/{id}', [MarketplaceAccountController::class, 'checkConnection']);
+        Route::middleware('cper:check-connection')->post('check-connection/{id}', [MarketplaceAccountController::class, 'checkConnection']);
         Route::middleware('cper:view-marketplace-accounts')->get('{marketplaceAccount}', [MarketplaceAccountController::class, 'show']);
         Route::middleware('cper:create-marketplace-accounts')->post('/', [MarketplaceAccountController::class, 'store']);
         Route::middleware('cper:edit-marketplace-accounts')->put('{marketplaceAccount}', [MarketplaceAccountController::class, 'update']);

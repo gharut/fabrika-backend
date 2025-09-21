@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Восстановление пароля</title>
+    <title>Подтверждение email адреса</title>
     <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
@@ -16,28 +16,26 @@
 <body>
     <div class="container">
         <div class="header">
-            <h2>Восстановление пароля</h2>
+            <h2>Подтверждение email адреса</h2>
         </div>
         
         <div class="content">
-            <p>Здравствуйте!</p>
+            <p>Здравствуйте, {{ $user->name }}!</p>
             
-            <p>Мы получили запрос на восстановление пароля для вашего аккаунта.</p>
+            <p>Благодарим вас за регистрацию в нашем сервисе. Для завершения регистрации пожалуйста подтвердите ваш email адрес.</p>
             
-            <p>Для установки нового пароля нажмите на кнопку ниже:</p>
+            <p>Для завершения нажмите на кнопку ниже:</p>
             
             <p style="text-align: center; margin: 30px 0;">
-                <a href="{{ $resetUrl }}" class="button">Восстановить пароль</a>
+                <a href="{{ $verificationUrl }}" class="button">Подтвердить Email</a>
             </p>
             
             <p>Или скопируйте и вставьте в браузер следующую ссылку:</p>
             <p style="word-break: break-all; background: #f8f9fa; padding: 10px; border-radius: 4px;">
-                {{ $resetUrl }}
+                {{ $verificationUrl }}
             </p>
             
-            <p>Если вы не запрашивали восстановление пароля, просто проигнорируйте это письмо.</p>
-            
-            <p>Ссылка действительна в течение 24 часов.</p>
+            <p>Если вы не создавали аккаунт, пожалуйста проигнорируйте это письмо.</p>
             
             <hr>
             <p>С уважением,<br>Команда {{ config('app.name') }}</p>

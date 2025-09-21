@@ -10,10 +10,9 @@ class RolesSeeder extends Seeder
 {
     public function run(): void
     {
-        $clientId = 1;
-
-        app()[\Spatie\Permission\PermissionRegistrar::class]->setPermissionsTeamId($clientId);
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        // $clientId = 1;
+        // app()[\Spatie\Permission\PermissionRegistrar::class]->setPermissionsTeamId($clientId);
+        // app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
         
         $user = Role::firstOrCreate(
             ['name' => 'user', 'guard_name' => 'api',],
@@ -37,6 +36,7 @@ class RolesSeeder extends Seeder
 
         $admin->givePermissionTo([
             'view-products', 'create-products', 'edit-products', 'delete-products',
+            'view-labels', 'create-labels', 'edit-labels', 'delete-labels',
             'view-clients', 'create-clients', 'edit-clients', 'delete-clients',
             'view-marketplace-accounts', 'create-marketplace-accounts', 
             'edit-marketplace-accounts', 'delete-marketplace-accounts', 'check-connection',
@@ -49,6 +49,7 @@ class RolesSeeder extends Seeder
         
         $manager->givePermissionTo([
             'view-products', 'create-products', 'edit-products', 'delete-products',
+            'view-labels', 'create-labels', 'edit-labels', 'delete-labels',
             'view-clients', 'create-clients', 'edit-clients', 'delete-clients',
             'view-marketplace-accounts', 'create-marketplace-accounts', 
             'edit-marketplace-accounts', 'delete-marketplace-accounts', 'check-connection',
@@ -59,6 +60,6 @@ class RolesSeeder extends Seeder
             'list-users', 'get-users',
         ]);
         
-        $logistics->givePermissionTo(['view-products', 'view-product-sizes', 'view-brands', 'view-cz', 'download-pdf-cz', 'list-users', 'get-users',]);
+        $logistics->givePermissionTo(['view-products', 'view-product-sizes', 'view-brands', 'view-cz', 'download-pdf-cz', 'list-users', 'get-users', 'view-labels', 'create-labels', 'edit-labels']);
     }
 }

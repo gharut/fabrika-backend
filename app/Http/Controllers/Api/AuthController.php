@@ -17,12 +17,12 @@ use App\Http\Requests\Api\Profile\ProfileUpdateRequest;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use App\Mail\PasswordResetMail;
 use App\Support\ClientContext;
-// use App\Services\ClientRoleService;
 
 class AuthController extends Controller
 {
@@ -30,42 +30,64 @@ class AuthController extends Controller
 
     public function register(RegisterRequest $request)
     {
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password)
-        ]);
+        $invited = $request->invited ?? false;
+        DB::beginTransaction();
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        try {
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password)
+            ]);
 
-        $client = Client::create([
-            'name' => 'Новая организация',
-            'email' => $request->email,
-            'phone' => '',
-            'created_by' => $user->id,
-            'updated_by' => $user->id,
-            'owner_id' => $user->id,
-        ]);
+            $token = $user->createToken('auth_token')->plainTextToken;
 
-        ClientUser::create([
-            'user_id' => $user->id,
-            'client_id' => $client->id,
-        ]);
+            if ($invited) {
+                DB::commit();
+                return response()->json([
+                    'access_token' => $token,
+                    'token_type' => 'Bearer',
+                ]);
+            }
 
-        // app(ClientRoleService::class)->createDefaultRoles($client);
+            $client = Client::create([
+                'name' => 'Новая организация',
+                'email' => $request->email,
+                'phone' => '',
+                'created_by' => $user->id,
+                'updated_by' => $user->id,
+                'owner_id' => $user->id,
+            ]);
 
-        app(PermissionRegistrar::class)->setPermissionsTeamId($client->id);
+            ClientUser::create([
+                'user_id' => $user->id,
+                'client_id' => $client->id,
+            ]);
 
-        $adminRole = Role::where('name', 'admin')
-            ->where('guard_name', 'api')
-            ->firstOrFail();
+            app(PermissionRegistrar::class)->setPermissionsTeamId($client->id);
+            $adminRole = Role::where('name', 'admin')
+                ->where('guard_name', 'api')
+                ->firstOrFail();
 
-        $user->assignRole($adminRole);
+            $user->assignRole($adminRole);
 
-        return response()->json([
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-        ]);
+            DB::commit();
+
+            return response()->json([
+                'access_token' => $token,
+                'token_type' => 'Bearer',
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            \Log::error('Registration failed: ' . $e->getMessage());
+            
+            return response()->json([
+                'message' => 'Произошла ошибка при регистрации',
+                'error' => 'Internal server error'
+            ], 500);
+        }
     }
 
     public function login(Request $request)

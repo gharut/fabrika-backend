@@ -26,10 +26,6 @@ return new class extends Migration
             
             $table->foreignId('created_by')->constrained('users')->onDelete('restrict');
             $table->foreignId('updated_by')->constrained('users')->onDelete('restrict');
-            $table->enum(
-                'category',
-                array_map(fn(ProductCategory $c) => $c->value, ProductCategory::cases())
-            );
         });
     }
 

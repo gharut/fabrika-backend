@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('printers', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('client_id')->constrained('clients')->restrictOnDelete();
             $table->string('name');
             $table->integer('labels_count')->default(0);
             $table->integer('warning_threshold')->default(10);

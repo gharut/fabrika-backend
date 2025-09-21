@@ -6,10 +6,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+use App\Models\Concerns\BelongsToClient;
+
 class ChestnyZnakLabel extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, BelongsToClient;
+
     protected $table = 'chestny_znak_labels';
+    
     protected $fillable = [
         'size_id',
         'code',

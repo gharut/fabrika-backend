@@ -5,12 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use App\Models\Concerns\BelongsToClient;
+
 class Printer extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToClient;
 
     protected $fillable = [
         'name',
+        'client_id',
         'labels_count',
         'capacity',
         'warning_threshold',

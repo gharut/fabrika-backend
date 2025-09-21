@@ -36,12 +36,11 @@ class WbProductCreateRequest extends FormRequest
             'name' => 'required|string|max:255',
             'color' => 'nullable|string|max:100',
             'composition' => 'nullable|string|max:100',
-            // 'client_id' => 'nullable|exists:clients,id',
             'brand_id' => 'nullable|exists:brands,id',
             'has_chestny_znak' => 'nullable|boolean',
             'article' => 'required|string|max:255',
             'vendor_code' => 'nullable|string|max:255',
-            'category' => ['required', Rule::in(array_map(fn($c) => $c->value, ProductCategory::cases()))],
+            'category_id' => 'nullable|exists:marketplace_categories,id',
         ];
     }
 

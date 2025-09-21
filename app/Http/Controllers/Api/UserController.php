@@ -85,6 +85,14 @@ class UserController extends Controller
     }
 
     public function update(UserUpdateRequest $request, User $user) {
+        $this->authorize('update', $user);
+        if (Auth::id() !== $user->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Недостаточно прав.'
+            ], 403);
+        }
+        
         $user->fill($request->only(['name', 'email', 'phone', 'address']));
         $saved = $user->save();
         if($saved) {
