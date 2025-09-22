@@ -40,7 +40,8 @@ class WbProduct extends Model
         return $this->hasOne(ProductMarketplaceCategory::class, 'product_id')
             ->where('marketplace_code', 'wb')
             ->with(['category' => function ($q) {
-                $q->select('id','name');
+                $q->select('id', 'name', 'parent_id')
+                ->with(['parent:id,name']);
             }]);
     }
 
@@ -53,15 +54,25 @@ class WbProduct extends Model
     public function getWbCategoryAttribute(): ?array
     {
         if (!$this->relationLoaded('wbCategoryLink')) {
-            $this->load('wbCategoryLink.category');
+            $this->load('wbCategoryLink.category.parent');
         }
 
         $link = $this->getRelation('wbCategoryLink');
         $cat  = $link?->category;
 
-        return $cat ? ['id' => $cat->id, 'name' => $cat->name] : null;
+        if (!$cat) {
+            return null;
+        }
+
+        return [
+            'id'       => $cat->id,
+            'name'     => $cat->name,
+            'parent'   => $cat->parent 
+                ? ['id' => $cat->parent->id, 'name' => $cat->parent->name]
+                : null,
+        ];
     }
-    
+
     public function tags(): MorphToMany
     {
         return $this->morphToMany(Tag::class, 'taggable');

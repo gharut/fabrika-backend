@@ -3,6 +3,7 @@
 namespace App\Services\Wb;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -26,8 +27,10 @@ class WbService
     public function __construct(
         private WbProductService $wbProductService
     ) {}
-
+    
+    private string $apiToken = '';
     private string $base = 'https://content-api.wildberries.ru/content/v2/get/cards/list';
+    private string $getObjectUrl = 'https://content-api.wildberries.ru/content/v2/object/all';
 
     public function importWbProducts(int $marketplaceAccountId, int $limit = 100): array
     {
@@ -43,11 +46,11 @@ class WbService
                 ];
             }
 
-            $apiToken = $marketplaceAccount['api_token_enc'];
+            $this->apiToken = $marketplaceAccount['api_token_enc'];
             $clientId = $marketplaceAccount['client_id'];
 
             $allCards = [];
-            foreach ($this->fetchAll($apiToken, $limit) as $batch) {
+            foreach ($this->fetchAll($limit) as $batch) {
                 $allCards = array_merge($allCards, $batch);
                 Log::info('Processed batch', ['count' => count($batch)]);
             }
@@ -120,9 +123,9 @@ class WbService
         }
     }
 
-    public function fetchAll(string $apiToken, int $limit = 100): \Generator
+    public function fetchAll(int $limit = 100): \Generator
     {
-        if (empty($apiToken)) {
+        if (empty($this->wbHeaders())) {
             return;
         }
 
@@ -141,8 +144,9 @@ class WbService
         while (true) {
             $payload = ['settings' => compact('cursor','filter','sort')];
 
+            // TO DO: вернуть проверку
             $resp = Http::withOptions(['verify' => false])
-                ->withHeaders(['Authorization' => $apiToken])
+                ->withHeaders($this->wbHeaders())
                 ->retry(5, 500, throw: false)
                 ->post($this->base.'?locale=ru', $payload);
             
@@ -398,20 +402,119 @@ class WbService
             if ($cat->name !== $subjectName) {
                 $cat->update(['name' => $subjectName]);
             }
-            return (int)$cat->id;
+        } else {
+            $cat = MarketplaceCategory::create([
+                'marketplace_code'   => 'wb',
+                'external_id'        => $subjectID,
+                'name'               => $subjectName,
+                'parent_id'          => null,
+                'parent_external_id' => null,
+            ]);
         }
 
-        $created = MarketplaceCategory::create([
-            'marketplace_code'   => 'wb',
-            'external_id'        => $subjectID,
-            'name'               => $subjectName,
-            // TO DO: Добавить родителя
-            'parent_id'          => null,
-            'parent_external_id' => null,
+        if (!$cat->parent_id && !$cat->parent_external_id) {
+            $parent = $this->resolveWbParent($subjectName, $subjectID, $locale);
+
+            if ($parent) {
+                $parentExternalId = (string) $parent['parentID'];
+                $parentName       = (string) $parent['parentName'];
+
+                $parentCat = MarketplaceCategory::query()
+                    ->where('marketplace_code', 'wb')
+                    ->where('external_id', $parentExternalId)
+                    ->first();
+
+                if ($parentCat) {
+                    if ($parentCat->name !== $parentName) {
+                        $parentCat->update(['name' => $parentName]);
+                    }
+                } else {
+                    $parentCat = MarketplaceCategory::create([
+                        'marketplace_code'   => 'wb',
+                        'external_id'        => $parentExternalId,
+                        'name'               => $parentName,
+                        'parent_id'          => null,
+                        'parent_external_id' => null,
+                    ]);
+                }
+
+                $cat->parent_id          = $parentCat->id;
+                $cat->parent_external_id = $parentExternalId;
+                $cat->save();
+            }
+        }
+
+        return (int) $cat->id;
+    }
+
+    protected function resolveWbParent(string $name, string $subjectID, string $locale = 'ru'): ?array
+    {
+        $query = [
+            'locale' => $locale,
+            'limit'  => 1000,
+            'name'   => $name,
+        ];
+
+        $cacheKey = 'wb:object_all:' . md5(json_encode($query));
+        $resp = Http::withOptions(['verify' => false])
+            ->withHeaders($this->wbHeaders())
+            ->get($this->getObjectUrl, $query);
+
+        if (!$resp->ok()) {
+            $msg = "WB object/all failed: status={$resp->status()}, body=" . $resp->body();
+            throw new \RuntimeException($msg);
+            \Log::warning('WB object/all failed', [
+                'status' => $resp->status(),
+                'query'  => $query,
+                'body'   => $resp->body(),
+            ]);
+        }
+
+        $json = $resp->json();
+
+        \Log::info('WB object/all with name json', [
+            'json' => $json,
+        ]);
+        $items = [];
+
+        if (isset($json['data']) && is_array($json['data'])) {
+            $items = $json['data'];
+        }
+
+        \Log::info('WB object/all with name', [
+            'subjectName' => $name,
+            'subjectID'   => $subjectID,
+            'count'       => count($items),
         ]);
 
-        return (int)$created->id;
+        foreach ($items as $item) {
+            $itemSubjectId = isset($item['subjectID']) ? (string) $item['subjectID'] : null;
+            if ($itemSubjectId === $subjectID) {
+                $parentID   = $item['parentID'] ?? null;
+                $parentName = $item['parentName'] ?? null;
+
+                if ($parentID && $parentName) {
+                    return [
+                        'parentID'   => (string) $parentID,
+                        'parentName' => (string) $parentName,
+                    ];
+                }
+                return null;
+            }
+        }
+
+        return null;
     }
+
+    protected function wbHeaders(?string $token = null): array
+    {
+        $token = $token ?: $this->apiToken ?? null;
+
+        return $token
+            ? ['Authorization' => $token]
+            : [];
+    }
+
 
     protected function linkProductToMarketplaceCategory(int $productId, string $marketplaceCode, int $marketplaceCategoryId): void
     {

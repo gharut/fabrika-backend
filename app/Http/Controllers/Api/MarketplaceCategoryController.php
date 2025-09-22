@@ -15,7 +15,10 @@ class MarketplaceCategoryController extends Controller
         $search = $request->get('search');
 
         $query = MarketplaceCategory::query()
-            ->select('id', 'name', 'marketplace_code')
+            ->select('id', 'name', 'marketplace_code', 'parent_id')
+            ->with(['parent' => function ($query) {
+                $query->select('id', 'name');
+            }])
             ->orderBy('name');
 
         if ($search) {
