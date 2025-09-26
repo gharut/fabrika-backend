@@ -13,8 +13,13 @@ trait BelongsToClient
         static::addGlobalScope('client', function (Builder $builder) {
             $ctx = app(ClientContext::class);
             if ($ctx->id()) {
-                $table = $builder->getModel()->getTable();
-                $builder->where("{$table}.client_id", $ctx->id());
+                $model = $builder->getModel();
+                
+                if (method_exists($model, 'applyClientScope')) {
+                    $model->applyClientScope($builder, $ctx);
+                } else {
+                    static::applyDefaultClientScope($builder, $ctx);
+                }
             }
         });
 
@@ -24,5 +29,11 @@ trait BelongsToClient
                 $model->client_id = $ctx->id();
             }
         });
+    }
+
+    protected static function applyDefaultClientScope(Builder $builder, ClientContext $ctx): void
+    {
+        $table = $builder->getModel()->getTable();
+        $builder->where("{$table}.client_id", $ctx->id());
     }
 }

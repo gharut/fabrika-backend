@@ -7,6 +7,7 @@ use App\Models\LabelTemplate;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
+// TO DO
 class LabelTemplateController extends Controller
 {
     /**
@@ -15,11 +16,6 @@ class LabelTemplateController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = LabelTemplate::query();
-
-        // можно отфильтровать по пользователю (если нужно)
-        if ($request->has('user_id')) {
-            $query->where('user_id', $request->get('user_id'));
-        }
 
         return response()->json([
             'data' => $query->get(),
