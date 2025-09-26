@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('file_extension')->nullable();
             $table->unsignedBigInteger('file_size')->nullable();
             $table->foreignId('user_id')->nullable()->constrained('users');
+            $table->foreignId('client_id')->nullable()->constrained('clients');
             
             $table->string('status')->default('in_progress'); 
             $table->text('error_message')->nullable();

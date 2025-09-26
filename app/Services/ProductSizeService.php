@@ -11,10 +11,15 @@ class ProductSizeService
     public function getAll(?int $productId, int $perPage = 15): LengthAwarePaginator
     {
         $query = ProductSize::with(['product'])
-            ->withCount(['chestnyZnakLabels as available_labels_count' => function($q) {
-                $q->where('used', false);
-            }]);
-
+            ->withCount([
+                'chestnyZnakLabels as available_count' => function($q) {
+                    $q->where('status', 'available');
+                },
+                'chestnyZnakLabels as used_count' => function($q) {
+                    $q->where('status', 'used');
+                },
+                'chestnyZnakLabels as total_count'
+            ]);
         if ($productId !== null) {
             $query->where('product_id', $productId);
         }
@@ -25,9 +30,15 @@ class ProductSizeService
     public function getOne(int $id): ProductSize
     {
         return ProductSize::with(['product'])
-            ->withCount(['chestnyZnakLabels as available_labels_count' => function($q) {
-                $q->where('used', false);
-            }])
+            ->withCount([
+                'chestnyZnakLabels as available_count' => function($q) {
+                    $q->where('status', 'available');
+                },
+                'chestnyZnakLabels as used_count' => function($q) {
+                    $q->where('status', 'used');
+                },
+                'chestnyZnakLabels as total_count'
+            ])
             ->findOrFail($id);
     }
 

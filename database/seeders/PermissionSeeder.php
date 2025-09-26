@@ -50,6 +50,11 @@ class PermissionSeeder extends Seeder
         Permission::create(['name' => 'edit-clients', 'visible_name' => 'Редактировать клиента', 'category' => 'CLIENTS']);
         Permission::create(['name' => 'delete-clients', 'visible_name' => 'Удалять клиента', 'category' => 'CLIENTS']);
 
+        // create permissions for ClientUsers
+        Permission::create(['name' => 'create-client-users', 'visible_name' => 'Добавлять участников организации', 'category' => 'CLIENT_USERS']);
+        Permission::create(['name' => 'edit-client-users', 'visible_name' => 'Редактировать участников организации', 'category' => 'CLIENT_USERS']);
+        Permission::create(['name' => 'delete-client-users', 'visible_name' => 'Удалять участников организации', 'category' => 'CLIENT_USERS']);
+
         // create permissions for Product
         Permission::create(['name' => 'view-products', 'visible_name' => 'Просматривать товар', 'category' => 'PRODUCTS']);
         Permission::create(['name' => 'edit-products', 'visible_name' => 'Редактировать товар', 'category' => 'PRODUCTS']);

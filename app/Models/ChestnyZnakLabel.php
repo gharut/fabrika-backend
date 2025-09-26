@@ -14,16 +14,24 @@ class ChestnyZnakLabel extends Model
 
     protected $table = 'chestny_znak_labels';
     
+    const STATUS_AVAILABLE = 'available';
+    const STATUS_USED = 'used';
+
+    const STATUSES = [
+        self::STATUS_AVAILABLE,
+        self::STATUS_USED,
+    ];
+
     protected $fillable = [
         'size_id',
         'code',
-        'used',
         'used_by',
         'used_at',
         'created_by',
         'updated_by',
         'operation_id',
         'number',
+        'status'
     ];
 
     protected $casts = [
@@ -31,6 +39,34 @@ class ChestnyZnakLabel extends Model
         'used_at' => 'datetime',
     ];
 
+    public function setStatusAttribute($value)
+    {
+        if (!in_array($value, self::STATUSES)) {
+            throw new \InvalidArgumentException("Invalid status: {$value}");
+        }
+        $this->attributes['status'] = $value;
+    }
+
+    public function scopeAvailable($query)
+    {
+        return $query->where('status', self::STATUS_AVAILABLE);
+    }
+
+    public function scopeUsed($query)
+    {
+        return $query->where('status', self::STATUS_USED);
+    }
+
+    public function isAvailable(): bool
+    {
+        return $this->status === self::STATUS_AVAILABLE;
+    }
+
+    public function isUsed(): bool
+    {
+        return $this->status === self::STATUS_USED;
+    }
+    
     public function size()
     {
         return $this->belongsTo(ProductSize::class, 'size_id');

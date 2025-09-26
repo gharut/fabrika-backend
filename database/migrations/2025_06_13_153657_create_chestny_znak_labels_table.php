@@ -16,7 +16,6 @@ return new class extends Migration
             $table->foreignId('size_id')->constrained('product_sizes')->restrictOnDelete();
             $table->foreignId('client_id')->constrained('clients')->restrictOnDelete();
             $table->string('code')->unique();
-            $table->boolean('used')->default(false);
             $table->foreignId('used_by')->nullable()->constrained('users')->restrictOnDelete();
             $table->timestamp('used_at')->nullable();
             $table->foreignId('created_by')->constrained('users')->restrictOnDelete();

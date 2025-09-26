@@ -31,18 +31,53 @@ class InvitationController extends Controller
         return response()->json($inv, 201);
     }
 
-    // Список активных/всех приглашений текущего клиента
     public function index(Request $request)
     {
-        $clientId = $request->user()->current_client_id ?? $request->header('X-Client-Id');
+        $user = $request->user();
+        $currentUserId = $user->id;
+        $currentUserEmail = $user->email;
+        $clientId = $request->header('X-Client-Id');
 
-        $query = Invitation::where('client_id', $clientId)->latest();
-        if ($request->boolean('active_only', true)) {
-            $query->whereNull('accepted_at')->whereNull('revoked_at')
-                  ->where(function($q){ $q->whereNull('expires_at')->orWhere('expires_at','>',now()); });
-        }
+        $invitations = Invitation::join('clients', 'invitations.client_id', '=', 'clients.id')
+            ->join('users', 'invitations.inviter_id', '=', 'users.id')
+            ->join('roles', 'invitations.role_id', '=', 'roles.id')
+            ->select([
+                'invitations.id',
+                'invitations.email',
+                'invitations.created_at',
+                'clients.name as client_name',
+                'clients.id as client_id',
+                'users.name as inviter_name',
+                'users.id as inviter_id',
+                'roles.name as role_name',
+                'roles.id as role_id'
+            ])
+            ->where('invitations.inviter_id', $currentUserId)
+            ->orWhere('invitations.email', $currentUserEmail)
+            ->orWhere('invitations.client_id', $clientId)
+            ->latest('invitations.created_at')
+            ->get()
+            ->map(function($invitation) {
+                return [
+                    'id' => $invitation->id,
+                    'client' => [
+                        'id' => $invitation->client_id,
+                        'name' => $invitation->client_name
+                    ],
+                    'inviter' => [
+                        'id' => $invitation->inviter_id,
+                        'name' => $invitation->inviter_name
+                    ],
+                    'role' => [
+                        'id' => $invitation->role_id,
+                        'name' => $invitation->role_name
+                    ],
+                    'email' => $invitation->email,
+                    'created_at' => $invitation->created_at
+                ];
+            });
 
-        return $query->paginate(20);
+        return $invitations;
     }
 
     public function revoke(int $id)

@@ -44,6 +44,7 @@ Route::group([
     'middleware'=> ['auth:sanctum'],
     'namespace' => 'App\Http\Controllers\Api',
 ], function() {
+    Route::post('invitations/accept', [InvitationController::class, 'accept']);
     Route::get('client-users/clients', [ClientUserController::class, 'getClientsByUser']);
     Route::get('profile/send-verification-email', [ProfileController::class, 'sendVerificationEmail']);
     Route::post('profile/verify-email', [ProfileController::class, 'verifyByToken']);
@@ -140,11 +141,11 @@ Route::group([
 
     Route::prefix('client-users')->group(function () {
         Route::get('/', [ClientUserController::class, 'index']);
-        Route::post('/', [ClientUserController::class, 'store']);
+        Route::middleware('cper:create-client-users')->post('/', [ClientUserController::class, 'store']);
         Route::get('users', [ClientUserController::class, 'getUsersByClient']);
-        Route::put('{clientUser}', [ClientUserController::class, 'update']);
+        Route::middleware('cper:edit-client-users')->put('{clientUser}', [ClientUserController::class, 'update']);
         Route::get('{clientUser}', [ClientUserController::class, 'show']);
-        Route::delete('{userId}', [ClientUserController::class, 'destroy']);
+        Route::middleware('cper:delete-client-users')->delete('{userId}', [ClientUserController::class, 'destroy']);
     });
 
     Route::prefix('marketplace-accounts')->group(function () {           
@@ -176,6 +177,7 @@ Route::group([
     
     Route::prefix('chestny-znak-labels')->group(function () {
         Route::middleware('cper:view-cz')->get('/', [ChestnyZnakLabelController::class, 'index']);
+        Route::middleware('cper:view-cz')->post('filters', [ChestnyZnakLabelController::class, 'indexNew']);
         Route::middleware('cper:download-pdf-cz')->post('download-pdf', [ChestnyZnakLabelController::class, 'downloadPdfLabels']);
         Route::middleware('cper:defective-cz')->post('defective', [ChestnyZnakLabelController::class, 'markAsUnused']);
         Route::middleware('cper:import-cz')->post('import', [ChestnyZnakLabelController::class, 'import']);
@@ -183,7 +185,6 @@ Route::group([
     });
 
     Route::prefix('invitations')->group(function () {
-        Route::post('accept', [InvitationController::class, 'accept']);
         Route::get('/', [InvitationController::class, 'index']);
         Route::post('/', [InvitationController::class, 'store']);
         Route::delete('{id}', [InvitationController::class, 'revoke']);

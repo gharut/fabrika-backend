@@ -24,8 +24,8 @@ class ChestnyZnakLabelService
             $query->where('size_id', $filters['size_id']);
         }
 
-        if (isset($filters['used'])) {
-            $query->where('used', (bool) $filters['used']);
+        if (isset($filters['status'])) {
+            $query->where('status', $filters['status']);
         }
 
         return $query->paginate($perPage);
@@ -40,6 +40,7 @@ class ChestnyZnakLabelService
     {
         $rules = [
             'size_id' => 'required|exists:product_sizes,id',
+            'status' => 'required|string|in:available,blocked',
             'code'    => [
                 'required',
                 'string',
@@ -81,7 +82,7 @@ class ChestnyZnakLabelService
     {
         $label = ChestnyZnakLabel::findOrFail($id);
 
-        $label->used = true;
+        $label->status = 'used';
         $label->used_by = $userId;
         $label->used_at = Carbon::now();
         $label->updated_by = Auth::id();
@@ -112,6 +113,7 @@ class ChestnyZnakLabelService
 
             try {
                 $this->create([
+                    'status' => 'available',
                     'size_id'     => $sizeId,
                     'code'        => $code,
                     'operation_id'=> $operation->id,
@@ -183,12 +185,12 @@ class ChestnyZnakLabelService
         }
 
         $notUsedIds = $labels
-            ->filter(fn(ChestnyZnakLabel $label) => !$label->used)
+            ->filter(fn(ChestnyZnakLabel $label) => $label->status === 'available')
             ->pluck('id')
             ->all();
 
         foreach ($labels as $label) {
-            $label->used = false;
+            $label->status = 'available';
             $label->used_by = null;
             $label->used_at = null;
             $label->updated_by = 1;
@@ -218,7 +220,7 @@ class ChestnyZnakLabelService
     public function getUnused(int $sizeId, int $quantity)
     {
         return ChestnyZnakLabel::where('size_id', $sizeId)
-            ->where('used', false)
+            ->where('status', 'available')
             ->orderBy('created_at', 'asc')
             ->orderBy('number', 'asc')
             ->limit($quantity)
@@ -229,7 +231,7 @@ class ChestnyZnakLabelService
     {
         return DB::transaction(function () use ($quantity, $oldSizeId, $newSizeId) {
             $available = ChestnyZnakLabel::where('size_id', $oldSizeId)
-                ->where('used', false)
+                ->where('status', 'available')
                 ->count();
 
             if ($available < $quantity) {
@@ -239,7 +241,7 @@ class ChestnyZnakLabelService
             }
 
             $ids = ChestnyZnakLabel::where('size_id', $oldSizeId)
-                ->where('used', false)
+                ->where('status', 'available')
                 ->orderBy('created_at', 'asc')
                 ->limit($quantity)
                 ->pluck('id')

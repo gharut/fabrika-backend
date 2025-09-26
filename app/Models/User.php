@@ -14,11 +14,6 @@ class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable, HasRoles, CanResetPassword;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'email',
         'password',
@@ -31,27 +26,32 @@ class User extends Authenticatable implements MustVerifyEmail
 
     protected string $guard_name = 'api';
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
 
     protected $appends = ['role', 'email_verified'];
+
+    public function getUserRolesCustom()
+    {
+        return $this->roles()
+            ->select('id', 'name', 'guard_name')
+            ->get()
+            ->map(function($role) {
+                return [
+                    'id' => $role->id,
+                    'name' => $role->name,
+                    'guard_name' => $role->guard_name,
+                    'is_primary' => $this->roles()->first()?->id === $role->id
+                ];
+            });
+    }
 
     public function getRoleAttribute()
     {

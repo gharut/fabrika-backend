@@ -4,14 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\BelongsToClient;
 
 class FileOperation extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToClient;
 
     protected $fillable = [
         'operation_type',
         'file_name',
+        'client_id',
         'file_extension',
         'file_size',
         'user_id',
@@ -29,7 +31,6 @@ class FileOperation extends Model
     public const STATUS_SUCCESS     = 'success';
     public const STATUS_FAILED      = 'failed';
 
-    // Удобный метод завершить операцию
     public function markAsFinished(string $status = self::STATUS_SUCCESS, ?string $error = null): void
     {
         $this->update([

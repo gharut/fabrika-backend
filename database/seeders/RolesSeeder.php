@@ -34,6 +34,21 @@ class RolesSeeder extends Seeder
             ['visible_name' => 'Логист']
         );
 
+        $ffAdmin = Role::firstOrCreate(
+            ['name' => 'ff-admin', 'guard_name' => 'api',],
+            ['visible_name' => 'Администратор фулфилмента']
+        );
+
+        $ffPack = Role::firstOrCreate(
+            ['name' => 'ff-pack', 'guard_name' => 'api',],
+            ['visible_name' => 'Упаковщик фулфилмента']
+        );
+
+        $ffViewer = Role::firstOrCreate(
+            ['name' => 'ff-viewer', 'guard_name' => 'api',],
+            ['visible_name' => 'Просмотр фулфилмента']
+        );
+
         $admin->givePermissionTo([
             'view-products', 'create-products', 'edit-products', 'delete-products',
             'view-labels', 'create-labels', 'edit-labels', 'delete-labels',
@@ -44,7 +59,7 @@ class RolesSeeder extends Seeder
             'import-wb-product', 'import-cz', 'defective-cz', 'replace-size-cz',
             'view-product-sizes', 'create-product-sizes', 'edit-product-sizes', 'delete-product-sizes',
             'view-brands', 'create-brands', 'edit-brands', 'delete-brands',
-            'list-users', 'get-users',
+            'list-users', 'get-users', 'edit-client-users', 'delete-client-users',
         ]);
         
         $manager->givePermissionTo([
@@ -60,6 +75,29 @@ class RolesSeeder extends Seeder
             'list-users', 'get-users',
         ]);
         
-        $logistics->givePermissionTo(['view-products', 'view-product-sizes', 'view-brands', 'view-cz', 'download-pdf-cz', 'list-users', 'get-users', 'view-labels', 'create-labels', 'edit-labels']);
+        $logistics->givePermissionTo([
+            'view-products', 'view-product-sizes', 'view-brands',
+            'view-cz', 'download-pdf-cz', 'list-users', 'get-users',
+            'view-labels', 'create-labels', 'edit-labels'
+        ]);
+
+        $ffAdmin->givePermissionTo([
+            'view-products', 'view-product-sizes', 'view-brands', 
+            'view-cz', 'download-pdf-cz', 
+            'view-labels', 'create-labels', 'edit-labels', 'delete-labels',
+            'list-users', 'get-users',
+        ]);
+
+        $ffPack->givePermissionTo([
+            'view-products', 'view-product-sizes', 'view-brands', 
+            'view-cz', 'download-pdf-cz', 
+            'view-labels', 'create-labels', 'edit-labels',
+        ]);
+
+        $ffViewer->givePermissionTo([
+            'view-products', 'view-product-sizes', 'view-brands', 
+            'view-cz', 'download-pdf-cz', 
+            'view-labels',
+        ]);
     }
 }

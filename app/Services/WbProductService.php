@@ -50,7 +50,7 @@ class WbProductService
                 'tags',
                 'sizes' => fn($q) => $q->select('id','product_id','barcode','value')
                     ->withCount([
-                        'chestnyZnakLabels as available_labels_count' => fn($q) => $q->where('used', false)
+                        'chestnyZnakLabels as available_labels_count' => fn($q) => $q->where('status', 'available')
                     ]),
                 'wbCategoryLink.category',
             ])
@@ -149,6 +149,7 @@ class WbProductService
                 'created_by'  => $currentUserId,
                 'updated_by'  => $currentUserId,
                 'product_id'  => $product->id,
+                'label_template_id' => 1,
             ]);
 
             if ($categoryId) {

@@ -10,6 +10,10 @@ class ClientUserService
 {
     public function create(array $data): ClientUser
     {
+        if (!empty($data['role']) && $this->isSuperAdminRole($data['role'])) {
+            throw new \Exception('Нельзя назначить роль супер-администратора');
+        }
+
         $clientUser = ClientUser::create([
             'client_id' => $data['client_id'],
             'user_id'   => $data['user_id'],
@@ -25,7 +29,11 @@ class ClientUserService
     }
 
     public function update(ClientUser $clientUser, array $data): ClientUser
-    {
+    {   
+        if (!empty($data['role_id']) && $this->isSuperAdminRole($data['role_id'])) {
+            throw new \Exception('Нельзя назначить роль супер-администратора');
+        }
+
         app(PermissionRegistrar::class)->setPermissionsTeamId($clientUser->client_id);
         if (!empty($data['role_id'])) {
             $role = Role::findOrFail($data['role_id']);
@@ -83,5 +91,11 @@ class ClientUserService
                 ] : null,
             ];
         });
+    }
+
+    private function isSuperAdminRole($roleId): bool
+    {
+        $superAdminRole = Role::where('name', 'super-admin')->first();
+        return $superAdminRole && $roleId == $superAdminRole->id;
     }
 }
