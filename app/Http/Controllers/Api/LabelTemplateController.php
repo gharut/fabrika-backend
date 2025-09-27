@@ -7,12 +7,9 @@ use App\Models\LabelTemplate;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
-// TO DO
+
 class LabelTemplateController extends Controller
 {
-    /**
-     * Получить список шаблонов
-     */
     public function index(Request $request): JsonResponse
     {
         $query = LabelTemplate::query();
@@ -22,9 +19,6 @@ class LabelTemplateController extends Controller
         ]);
     }
 
-    /**
-     * Получить один шаблон
-     */
     public function show(int $id): JsonResponse
     {
         $template = LabelTemplate::findOrFail($id);
@@ -34,9 +28,7 @@ class LabelTemplateController extends Controller
         ]);
     }
 
-    /**
-     * Создать шаблон
-     */
+    // TO DO: исправить данные которые передаем, добавить валидацию
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -55,9 +47,7 @@ class LabelTemplateController extends Controller
         ], 201);
     }
 
-    /**
-     * Обновить шаблон
-     */
+    // TO DO: добавить проверки по пользователю, чтобы нельзя было редачить чужие и системные
     public function update(Request $request, int $id): JsonResponse
     {
         $template = LabelTemplate::findOrFail($id);
@@ -75,9 +65,7 @@ class LabelTemplateController extends Controller
         ]);
     }
 
-    /**
-     * Удалить шаблон
-     */
+    // TO DO: добавить проверки по пользователю, чтобы нельзя было удалять чужие и системные
     public function destroy(int $id): JsonResponse
     {
         $template = LabelTemplate::findOrFail($id);
