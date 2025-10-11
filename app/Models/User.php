@@ -9,6 +9,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use App\Models\SystemAccount;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -72,15 +73,38 @@ class User extends Authenticatable implements MustVerifyEmail
         return method_exists($this, 'hasVerifiedEmail') ? $this->hasVerifiedEmail() : !is_null($this->email_verified_at);
     }
 
-    public function clientUsers()
+    public function organizationParticipants()
     {
-        return $this->hasMany(ClientUser::class, 'user_id');
+        return $this->morphMany(OrganizationParticipant::class, 'model');
     }
 
     public function clients()
     {
-        return $this->belongsToMany(Client::class, 'client_users', 'user_id', 'client_id')
+        return $this->belongsToMany(Client::class, 'organization_participants', 'user_id', 'client_id')
             ->withPivot('role_id')
             ->withTimestamps();
     }
+
+    public function systemAccount()
+    {
+        return $this->hasOne(SystemAccount::class);
+    }
+
+    public function isSystemUser(): bool
+    {
+        $account = $this->systemAccount;
+
+        if (!$account) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        $account = $this->systemAccount;
+        return $account && $account->isSuperAdmin();
+    }
+
 }

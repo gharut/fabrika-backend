@@ -18,17 +18,16 @@ use Spatie\Permission\PermissionRegistrar;
 
 class UserController extends Controller
 {
-
     public function list(): JsonResponse
     {
         $users = \DB::table('users')
             ->select('id', 'name', 'email', 'phone', 'avatar', 'created_at')
             ->get();
-        
+
         if ($users->isEmpty()) {
             return response()->json([]);
         }
-        
+
         $userRoles = \DB::table('model_has_roles')
             ->where('model_type', User::class)
             ->whereIn('model_id', $users->pluck('id'))
@@ -41,28 +40,39 @@ class UserController extends Controller
                 'model_has_roles.client_id',
                 'clients.name as client_name'
             )
-            ->get()
-            ->groupBy('model_id');
+            ->get();
+
+        // Группируем роли по комбинации user_id + client_id
+        $groupedData = [];
         
-        $result = $users->map(function ($user) use ($userRoles) {
-            $roles = $userRoles->get($user->id, collect())->map(function ($role) {
-                return [
-                    'role' => ['id' => $role->role_id, 'visible_name' => $role->role_visible_name],
-                    'client' => $role->client_name,
-                ];
-            })->toArray();
+        foreach ($userRoles as $userRole) {
+            $user = $users->firstWhere('id', $userRole->model_id);
+            $key = $userRole->model_id . '_' . $userRole->client_id;
             
-            return [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'avatar' => $user->avatar,
-                'created_at' => $user->created_at,
-                'roles' => $roles
+            if (!isset($groupedData[$key])) {
+                $groupedData[$key] = [
+                    'client_id' => $userRole->client_id,
+                    'user_id' => $userRole->model_id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'avatar' => $user->avatar,
+                    'created_at' => $user->created_at,
+                    'client_name' => $userRole->client_name,
+                    'roles' => []
+                ];
+            }
+            
+            // Добавляем роль в массив ролей
+            $groupedData[$key]['roles'][] = [
+                'id' => $userRole->role_id,
+                'visible_name' => $userRole->role_visible_name,
             ];
-        });
-        
+        }
+
+        // Преобразуем ассоциативный массив в индексный
+        $result = array_values($groupedData);
+
         return response()->json($result);
     }
 

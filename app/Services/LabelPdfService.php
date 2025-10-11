@@ -310,6 +310,7 @@ class LabelPdfService
         $row = [
             'name'        => $label->name,
             'article'     => $product->article ?? 'ART123',
+            'brand'       => !empty($product->brand) ? $product->brand->name : null,
             'client'      => $product->client->name ?? 'Клиент',
             'composition' => $product->composition ?? 'Состав: хлопок',
             'color'       => $product->color ?? 'Цвет',

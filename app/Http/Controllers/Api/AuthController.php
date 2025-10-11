@@ -10,7 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Client;
-use App\Models\ClientUser;
+use App\Models\OrganizationParticipant;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 use App\Http\Requests\Api\Profile\ProfileUpdateRequest;
@@ -59,9 +59,10 @@ class AuthController extends Controller
                 'owner_id' => $user->id,
             ]);
 
-            ClientUser::create([
-                'user_id' => $user->id,
-                'client_id' => $client->id,
+            OrganizationParticipant::create([
+                'organization_id' => $client->id,
+                'model_type'      => User::class,
+                'model_id'        => $user->id,
             ]);
 
             app(PermissionRegistrar::class)->setPermissionsTeamId($client->id);
@@ -104,19 +105,25 @@ class AuthController extends Controller
             'roles:name,visible_name',
             'permissions:name'
         ])->where('email', $request['email'])->firstOrFail();
-        $clientId = $user->clientUsers()->pluck('client_id')->first();
+        $clientId = $user->organizationParticipants()->pluck('organization_id')->first();
         app(PermissionRegistrar::class)->setPermissionsTeamId($clientId);
 
         $token = $user->createToken('auth_token')->plainTextToken;
         $user->role = $user->roles->first();
 
+        $responseData = array_merge([
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+        ], $user->toArray());
+
+        if ($user->isSystemUser()) {
+            $responseData['is_system'] = $user->isSuperAdmin();
+        }
+
         return response()->json([
             'success' => true,
             'clientId' => $clientId,
-            'data' => array_merge([
-                'access_token' => $token,
-                'token_type' => 'Bearer',
-            ], $user->toArray())
+            'data' => $responseData
         ]);
     }
 

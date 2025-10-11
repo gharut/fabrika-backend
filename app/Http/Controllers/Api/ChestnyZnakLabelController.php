@@ -10,6 +10,10 @@ use App\Http\Requests\Api\ChestnyZnakLabel\ChestnyZnakLabelImportRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Models\LabelPrintOptions;
+use Illuminate\Support\Facades\Storage;
+use App\Jobs\ProcessPdfImportJob;
+use App\Models\FileOperation;
+use Illuminate\Support\Facades\Auth;
 
 class ChestnyZnakLabelController extends Controller
 {
@@ -250,7 +254,7 @@ class ChestnyZnakLabelController extends Controller
         ]);
     }
 
-    public function import(ChestnyZnakLabelImportRequest $req): JsonResponse
+    public function importCsv(ChestnyZnakLabelImportRequest $req): JsonResponse
     {
         $files = $req->file('file');
         $sizeIds = $req->input('size_id');
@@ -274,7 +278,68 @@ class ChestnyZnakLabelController extends Controller
 
         return response()->json($fileResults, $hasErrors ? 207 : 201);
     }
-    
+
+    public function importPdf(Request $req): JsonResponse
+    {
+        $files = $req->file('file');
+        $sizeIds = $req->input('size_id', []);
+        $clientId = app(\App\Support\ClientContext::class)->id();
+
+        if (!$files) {
+            return response()->json(['error' => 'Файлы не загружены'], 400);
+        }
+
+        if (!is_array($files)) {
+            $files = [$files];
+        }
+
+        $userId = Auth::id();
+        $operations = [];
+
+        foreach ($files as $index => $file) {
+            if (!$file->isValid()) {
+                continue;
+            }
+
+            $sizeId = (int) ($sizeIds[$index] ?? 0);
+            $path = $file->store('imports');
+
+            $operation = FileOperation::create([
+                'operation_type' => 'import',
+                'file_name'      => $file->getClientOriginalName(),
+                'file_extension' => $file->getClientOriginalExtension(),
+                'file_size'      => $file->getSize(),
+                'user_id'        => $userId,
+                'status'         => FileOperation::STATUS_IN_PROGRESS,
+                'progress'       => 0,
+                'related_to'     => 'ChestnyZnakLabel',
+            ]);
+
+            ProcessPdfImportJob::dispatch($operation->id, $path, $sizeId, $clientId, Auth::id());
+
+            $operations[] = [
+                'operation_id' => $operation->id,
+                'file_name'    => $file->getClientOriginalName(),
+            ];
+        }
+
+        return response()->json([
+            'data' => collect($operations)->map(fn($op) => [
+                'fileName' => $op['file_name'],
+            ]),
+            'message' => 'Файлы приняты в обработку',
+        ], 202);
+
+    }
+
+    public function status(Request $request): JsonResponse
+    {
+        $id = $request->query('operation_id');
+        $op = FileOperation::findOrFail($id);
+
+        return response()->json($op);
+    }
+
     public function downloadPdfLabels(Request $request)
     {
         $data = $request->validate([

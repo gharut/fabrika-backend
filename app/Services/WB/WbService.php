@@ -227,6 +227,7 @@ class WbService
                     'composition' => $characteristics['composition'] ?? '',
                     'has_chestny_znak' =>  false,
                     'brand_id' => $brandId,
+                    'is_wb_import' => true,
                 ];
 
                 $existingProduct = WbProduct::where('article', $nmID)

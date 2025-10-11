@@ -14,7 +14,7 @@ class LabelUpdateRequest extends FormRequest
         $clientId = $this->input('client_id');
         
         if ($clientId) {
-            return $user->clientUsers()->where('client_id', $clientId)->exists();
+            return $user->organizationParticipants()->where('client_id', $clientId)->exists();
         }
         
         return $user !== null;

@@ -40,7 +40,7 @@ class WbProductUpdateRequest extends FormRequest
             'has_chestny_znak' => 'sometimes|nullable|boolean',
             'article' => 'sometimes|required|string|max:255',
             'vendor_code' => 'sometimes|nullable|string|max:255',
-            'category_id' => 'sometimes|exists:marketplace_categories,id',
+            'category_id' => 'sometimes|nullable|exists:marketplace_categories,id',
         ];
     }
 

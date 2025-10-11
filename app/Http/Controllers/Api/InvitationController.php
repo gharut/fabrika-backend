@@ -83,7 +83,10 @@ class InvitationController extends Controller
     public function revoke(int $id)
     {
         $this->service->revoke($id);
-        return response()->json(['status'=>'ok']);
+        return response()->json([
+            'success' => true,
+            'message' => ''
+        ]);
     }
 
     public function accept(InvitationAcceptRequest $request)

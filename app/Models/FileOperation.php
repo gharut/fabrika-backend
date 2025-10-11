@@ -30,6 +30,7 @@ class FileOperation extends Model
     public const STATUS_IN_PROGRESS = 'in_progress';
     public const STATUS_SUCCESS     = 'success';
     public const STATUS_FAILED      = 'failed';
+    public const STATUS_PARTIAL_SUCCESS     = 'partial_success';
 
     public function markAsFinished(string $status = self::STATUS_SUCCESS, ?string $error = null): void
     {

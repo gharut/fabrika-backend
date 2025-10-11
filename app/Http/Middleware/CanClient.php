@@ -14,6 +14,10 @@ class CanClient
         app(PermissionRegistrar::class)->setPermissionsTeamId($clientId);
 
         $user = $request->user();
+        if ($user->isSuperAdmin()) {
+            return $next($request);
+        }
+
         $user->load('roles.permissions');
 
         if (!$user || !$user->can($ability)) {

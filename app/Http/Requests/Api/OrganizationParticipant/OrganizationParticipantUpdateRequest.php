@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Api\ClientUser;
+namespace App\Http\Requests\Api\OrganizationParticipant;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class ClientUserUpdateRequest extends FormRequest
+class OrganizationParticipantUpdateRequest extends FormRequest
 {
     public function authorize(): bool
     {

@@ -25,12 +25,14 @@ class WbProduct extends Model
         'vendor_code',
         'composition',
         'has_chestny_znak',
+        'is_wb_import',
         'created_by',
         'updated_by',
     ];
 
     protected $casts = [
         'has_chestny_znak' => 'boolean',
+        'is_wb_import' => 'boolean',
     ];
 
     protected $appends = ['wb_category'];

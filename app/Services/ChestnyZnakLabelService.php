@@ -4,23 +4,19 @@ namespace App\Services;
 
 use App\Models\ChestnyZnakLabel;
 use App\Models\FileOperation;
-
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
-use InvalidArgumentException;
-use TCPDF;
-use Symfony\Component\HttpFoundation\Response;
 
 class ChestnyZnakLabelService
 {
     public function getAll(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
         $query = ChestnyZnakLabel::with(['size', 'usedBy', 'creator', 'editor']);
-        if (!empty($filters['size_id'])) {
+        if (! empty($filters['size_id'])) {
             $query->where('size_id', $filters['size_id']);
         }
 
@@ -36,17 +32,17 @@ class ChestnyZnakLabelService
         return ChestnyZnakLabel::with()->findOrFail($id);
     }
 
-    public function create(array $data): ChestnyZnakLabel
+    public function create(array $data, ?int $userId = null): ChestnyZnakLabel
     {
         $rules = [
             'size_id' => 'required|exists:product_sizes,id',
             'status' => 'required|string|in:available,blocked',
-            'code'    => [
+            'code' => [
                 'required',
                 'string',
                 'unique:chestny_znak_labels,code',
-                function($attribute, $value, $fail) {
-                    if (!preg_match('/^01(\d{14})21([\x1D\x20-\x7E]+)$/', $value, $m)) {
+                function ($attribute, $value, $fail) {
+                    if (! preg_match('/^01(\d{14})21([\x1D\x20-\x7E]+)$/', $value, $m)) {
                         return $fail('Неверная структура кода метки.');
                     }
                     $gtin = $m[1];
@@ -61,8 +57,8 @@ class ChestnyZnakLabelService
 
         $validated = Validator::make($data, $rules)->validate();
 
-        $validated['created_by'] = Auth::id();
-        $validated['updated_by'] = Auth::id();
+        $validated['created_by'] = Auth::id() ?? $userId;
+        $validated['updated_by'] = Auth::id() ?? $userId;
 
         return ChestnyZnakLabel::create($validated);
     }
@@ -92,18 +88,36 @@ class ChestnyZnakLabelService
     }
 
     public function importCsv(int $sizeId, array $codes): array
-    {   
+    {
         $userId = Auth::id();
         $operation = FileOperation::create([
-            'operation_type'  => 'import',
-            'file_name'       => '',
-            'file_extension'  => 'csv',
-            'file_size'       => null,
-            'user_id'         => $userId,
-            'status'          => FileOperation::STATUS_IN_PROGRESS,
-            'related_to'      => 'ChestnyZnakLabel',
+            'operation_type' => 'import',
+            'file_name' => '',
+            'file_extension' => 'csv',
+            'file_size' => null,
+            'user_id' => $userId,
+            'status' => FileOperation::STATUS_IN_PROGRESS,
+            'related_to' => 'ChestnyZnakLabel',
         ]);
 
+        $createdCount = 0;
+        $errors = [];
+        $seq = 1;
+
+        $result = $this->processCodes($operation->id, $sizeId, $codes);
+        $operation->update([
+            'status' => empty($result['errors'])
+                ? FileOperation::STATUS_SUCCESS
+                : ($result['created_count'] > 0 ? 'partial' : FileOperation::STATUS_FAILED),
+            'error_message' => empty($result['errors']) ? null : 'Есть ошибки при обработке.',
+            'finished_at' => now(),
+        ]);
+
+        return array_merge(['operation_id' => $operation->id], $result);
+    }
+
+    public function processCodes(int $operationId, int $sizeId, array $codes, ?int $userId = null): array
+    {
         $createdCount = 0;
         $errors = [];
         $seq = 1;
@@ -114,11 +128,11 @@ class ChestnyZnakLabelService
             try {
                 $this->create([
                     'status' => 'available',
-                    'size_id'     => $sizeId,
-                    'code'        => $code,
-                    'operation_id'=> $operation->id,
-                    'number'  => $seq,
-                ]);
+                    'size_id' => $sizeId,
+                    'code' => $code,
+                    'operation_id' => $operationId,
+                    'number' => $seq,
+                ], $userId);
                 $createdCount++;
             } catch (ValidationException $e) {
                 $errors[] = [
@@ -130,25 +144,16 @@ class ChestnyZnakLabelService
                 $errors[] = [
                     'seq' => $seq,
                     'code' => $code,
-                    'message' => 'Непредвиденная ошибка: ' . $e->getMessage(),
+                    'message' => 'Непредвиденная ошибка: '.$e->getMessage(),
                 ];
             }
 
             $seq++;
         }
 
-        $operation->update([
-            'status' => empty($errors)
-                ? FileOperation::STATUS_SUCCESS
-                : ($createdCount > 0 ? 'partial' : FileOperation::STATUS_FAILED),
-            'error_message' => empty($errors) ? null : 'Есть ошибки при обработке.',
-            'finished_at' => now(),
-        ]);
-
         return [
-            'operation_id'   => $operation->id,
-            'created_count'  => $createdCount,
-            'errors'         => $errors,
+            'created_count' => $createdCount,
+            'errors' => $errors,
         ];
     }
 
@@ -176,16 +181,16 @@ class ChestnyZnakLabelService
         $labels = ChestnyZnakLabel::whereIn('id', $ids)->get();
         $foundIds = $labels->pluck('id')->all();
         $missing = array_diff($ids, $foundIds);
-        if (!empty($missing)) {
-            return (object)[
+        if (! empty($missing)) {
+            return (object) [
                 'success' => false,
-                'message' => 'Этикетки не найдены: ' . implode(', ', $missing),
+                'message' => 'Этикетки не найдены: '.implode(', ', $missing),
                 'updated' => 0,
             ];
         }
 
         $notUsedIds = $labels
-            ->filter(fn(ChestnyZnakLabel $label) => $label->status === 'available')
+            ->filter(fn (ChestnyZnakLabel $label) => $label->status === 'available')
             ->pluck('id')
             ->all();
 
@@ -198,9 +203,10 @@ class ChestnyZnakLabelService
         }
 
         $count = $labels->count();
-        return (object)[
+
+        return (object) [
             'success' => true,
-            'message' => 'Успешно обновлено этикеток: ' . $count,
+            'message' => 'Успешно обновлено этикеток: '.$count,
             'updated' => $count,
         ];
     }
@@ -208,12 +214,13 @@ class ChestnyZnakLabelService
     private function validateGtin14(string $digits14): bool
     {
         $digits = array_map('intval', str_split($digits14));
-        $check  = array_pop($digits);
+        $check = array_pop($digits);
         $sum = 0;
         foreach (array_reverse($digits) as $i => $d) {
             $sum += $d * ($i % 2 === 0 ? 3 : 1);
         }
         $calc = (10 - ($sum % 10)) % 10;
+
         return $calc === $check;
     }
 

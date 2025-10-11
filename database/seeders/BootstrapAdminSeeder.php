@@ -4,8 +4,9 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Models\Client;
-use App\Models\ClientUser;
+use App\Models\OrganizationParticipant;
 use App\Models\Role;
+use App\Models\SystemAccount;
 use App\Enums\ClientTypes;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -14,7 +15,12 @@ use Spatie\Permission\PermissionRegistrar;
 class BootstrapAdminSeeder extends Seeder
 {
     public function run(): void
-    {
+    {   
+        $admin = Role::firstOrCreate(
+            ['name' => 'admin', 'guard_name' => 'api',],
+            ['visible_name' => 'Администратор']
+        );
+
         $client = Client::create([
             'name' => 'FFabrika',
             'phone'=> '',
@@ -27,16 +33,25 @@ class BootstrapAdminSeeder extends Seeder
             ['name' => 'Super Admin', 'password' => Hash::make('admin')]
         );
 
-        ClientUser::firstOrCreate(
-            ['client_id' => $client->id, 'user_id' => $user->id],
-        );
+        OrganizationParticipant::firstOrCreate([
+            'organization_id' => $client->id,
+            'model_type' => User::class,
+            'model_id' => $user->id,
+        ]);
 
-        $role = Role::firstOrCreate(['name' => 'super-admin', 'visible_name' => 'Суперадминистратор', 'guard_name' => 'api']);
 
         app(PermissionRegistrar::class)->setPermissionsTeamId($client->id);
-        $user->assignRole($role);
+        $user->assignRole('admin');
 
-        // Удобство — запомним последний выбранный client
-        // $user->forceFill(['last_selected_client_id' => $client->id])->save();
+        SystemAccount::firstOrCreate(
+            ['user_id' => $user->id],
+            [
+                'name' => 'Главный супер-админ',
+                'type' => 'human',
+                'role' => 'super-admin',
+                'notes' => 'Первичный системный администратор платформы',
+                'created_by' => $user->id,
+            ]
+        );
     }
 }

@@ -32,6 +32,7 @@ class Client extends Model
         'created_by',
         'updated_by',
         'owner_id',
+        'is_fulfillment',
     ];
 
     public function creator()
@@ -66,12 +67,13 @@ class Client extends Model
 
     public function users()
     {
-        return $this->belongsToMany(User::class, 'client_users', 'client_id', 'user_id')
-            ->withPivot('role_id')
+        return $this->belongsToMany(User::class, 'organization_participants', 'organization_id', 'model_id')
+            ->wherePivot('model_type', User::class)
             ->withTimestamps();
     }
     
     protected $casts = [
         'details' => 'array',
+        'is_fulfillment' => 'boolean',
     ];
 }

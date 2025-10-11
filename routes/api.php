@@ -6,9 +6,10 @@ use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\TagsController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\FileOperationController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\Api\MarketplaceAccountController;
-use App\Http\Controllers\Api\ClientUserController;
+use App\Http\Controllers\Api\OrganizationParticipantController;
 use App\Http\Controllers\Api\LabelController;
 use App\Http\Controllers\Api\PrinterController;
 use App\Http\Controllers\Api\InvitationController;
@@ -45,7 +46,7 @@ Route::group([
     'namespace' => 'App\Http\Controllers\Api',
 ], function() {
     Route::post('invitations/accept', [InvitationController::class, 'accept']);
-    Route::get('client-users/clients', [ClientUserController::class, 'getClientsByUser']);
+    Route::get('client-users/clients', [OrganizationParticipantController::class, 'getClientsByUser']);
     Route::get('profile/send-verification-email', [ProfileController::class, 'sendVerificationEmail']);
     Route::post('profile/verify-email', [ProfileController::class, 'verifyByToken']);
 });
@@ -55,7 +56,9 @@ Route::group([
     'namespace' => 'App\Http\Controllers\Api',
 ], function() {
     Route::middleware('cper:import-wb-product')->post('wb/import-product', [\App\Http\Controllers\Api\WbController::class, 'import']);
-
+    
+    Route::get('/file-operations', [FileOperationController::class, 'index']);
+    
     Route::post('change-password', [AuthController::class, 'changePassword']);
 
     Route::get('/marketplace-categories', [MarketplaceCategoryController::class, 'index']);
@@ -111,11 +114,13 @@ Route::group([
 
     Route::prefix('clients')->group(function () {
         Route::middleware('cper:create-clients')->post('/', [ClientController::class, 'store']);
+        Route::middleware('cper:view-clients')->get('ff', [ClientController::class, 'getFullfilmentOrg']);
         Route::middleware('cper:view-clients')->post('filters', [ClientController::class, 'getAllFiltered']);
         Route::middleware('cper:view-clients')->get('{client}', [ClientController::class, 'get']);
         Route::middleware('cper:edit-clients')->put('{client}', [ClientController::class, 'update']);
         Route::middleware('cper:view-clients')->get('/', [ClientController::class, 'list']);
         Route::middleware('cper:delete-clients')->delete('{client}', [ClientController::class, 'destroy']);
+        Route::middleware('cper:set-fulfillment')->patch('{client}/set-fulfillment', [ClientController::class, 'setFulfillment']);
     });
 
     Route::prefix('tags')->group(function () {
@@ -140,12 +145,17 @@ Route::group([
     });
 
     Route::prefix('client-users')->group(function () {
-        Route::get('/', [ClientUserController::class, 'index']);
-        Route::middleware('cper:create-client-users')->post('/', [ClientUserController::class, 'store']);
-        Route::get('users', [ClientUserController::class, 'getUsersByClient']);
-        Route::middleware('cper:edit-client-users')->put('{clientUser}', [ClientUserController::class, 'update']);
-        Route::get('{clientUser}', [ClientUserController::class, 'show']);
-        Route::middleware('cper:delete-client-users')->delete('{userId}', [ClientUserController::class, 'destroy']);
+        Route::get('/', [OrganizationParticipantController::class, 'index']);
+        Route::middleware('cper:create-client-users')->post('/', [OrganizationParticipantController::class, 'store']);
+        // TO DO ДОБАВИТЬ СВОИ ПРАВА
+        Route::post('/ff', [OrganizationParticipantController::class, 'addFulfillmentToClient']);
+        Route::get('users', [OrganizationParticipantController::class, 'getUsersByClient']);
+        // TO DO ДОБАВИТЬ СВОИ ПРАВА
+        Route::get('invitations', [OrganizationParticipantController::class, 'getInvitationsByClient']);
+        Route::middleware('cper:edit-client-users')->put('update-role', [OrganizationParticipantController::class, 'updateRole']);
+        Route::middleware('cper:edit-client-users')->put('{organizationParticipant}', [OrganizationParticipantController::class, 'update']);
+        Route::get('{organizationParticipant}', [OrganizationParticipantController::class, 'show']);
+        Route::middleware('cper:delete-client-users')->delete('{id}', [OrganizationParticipantController::class, 'destroy']);
     });
 
     Route::prefix('marketplace-accounts')->group(function () {           
@@ -180,7 +190,9 @@ Route::group([
         Route::middleware('cper:view-cz')->post('filters', [ChestnyZnakLabelController::class, 'indexNew']);
         Route::middleware('cper:download-pdf-cz')->post('download-pdf', [ChestnyZnakLabelController::class, 'downloadPdfLabels']);
         Route::middleware('cper:defective-cz')->post('defective', [ChestnyZnakLabelController::class, 'markAsUnused']);
-        Route::middleware('cper:import-cz')->post('import', [ChestnyZnakLabelController::class, 'import']);
+        Route::middleware('cper:import-cz')->post('import/csv', [ChestnyZnakLabelController::class, 'importCsv']);
+        Route::middleware('cper:import-cz')->post('import/pdf', [ChestnyZnakLabelController::class, 'importPdf']);
+        Route::middleware('cper:import-cz')->get('import/pdf/status', [ChestnyZnakLabelController::class, 'status']);
         Route::middleware('cper:replace-size-cz')->post('replace-size', [ChestnyZnakLabelController::class, 'replaceSize']);
     });
 

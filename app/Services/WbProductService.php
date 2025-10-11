@@ -50,7 +50,8 @@ class WbProductService
                 'tags',
                 'sizes' => fn($q) => $q->select('id','product_id','barcode','value')
                     ->withCount([
-                        'chestnyZnakLabels as available_labels_count' => fn($q) => $q->where('status', 'available')
+                        'chestnyZnakLabels as available_labels_count' => fn($q) => $q->where('status', 'available'),
+                        'chestnyZnakLabels as total_cz'
                     ]),
                 'wbCategoryLink.category',
             ])

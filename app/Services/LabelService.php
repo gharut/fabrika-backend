@@ -78,8 +78,10 @@ class LabelService
 
     public function getOne(int $id): Label
     {
-        return Label::with(['product','client','creator','editor'])
+        $label = Label::with(['product','client','creator','editor'])
                     ->findOrFail($id);
+        $label->loadMissing('product.brand');
+        return $label;
     }
 
     public function create(array $data): Label

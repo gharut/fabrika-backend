@@ -8,6 +8,7 @@ use App\Models\Client;
 use App\Models\Supplier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ClientController extends Controller
 {
@@ -72,6 +73,63 @@ class ClientController extends Controller
         return response()->json(
             $query->get()
         );
+    }
+
+    // Получить организации Фулфилмент
+    public function getFullfilmentOrg(Request $request)
+    {
+        $clientId = $request->header('X-Client-Id');
+
+        if (!$clientId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Client id is required',
+            ], 422);
+        }
+
+        $showLinked = filter_var($request->input('show_linked', true), FILTER_VALIDATE_BOOLEAN);
+
+        $query = DB::table('clients')
+            ->where('is_fulfillment', 1)
+            ->select([
+                'id',
+                'name',
+                'email',
+                'phone',
+                'legal_address as address',
+                'created_at',
+            ]);
+
+        if (!$showLinked) {
+            $linkedIds = DB::table('organization_participants')
+                ->where('organization_id', $clientId)
+                ->where('model_type', \App\Models\Client::class)
+                ->pluck('model_id')
+                ->toArray();
+
+            if (!empty($linkedIds)) {
+                $query->whereNotIn('id', $linkedIds);
+            }
+        }
+
+        $items = $query->orderBy('name')->get();
+
+        $result = $items->map(function ($f) {
+            return [
+                'id'         => $f->id,
+                'name'       => $f->name,
+                'email'      => $f->email,
+                'phone'      => $f->phone,
+                'address'    => $f->address,
+                'created_at' => $f->created_at,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data'    => $result,
+            'showLinked' => $showLinked
+        ]);
     }
 
     /**
@@ -151,6 +209,28 @@ class ClientController extends Controller
             'success' => $saved,
             'data' => $client
         ]);
+    }
+
+    // TO DO: ДОБАВИТЬ ПРОВЕРКУ ПРАВ
+    public function setFulfillment(Request $request, Client $client): JsonResponse
+    {
+        try {
+            $client->update([
+                'is_fulfillment' => true,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Организация установлена как фулфилмент',
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ошибка при обновлении',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
