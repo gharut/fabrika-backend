@@ -11,14 +11,14 @@ class LabelCreateRequest extends FormRequest
     public function authorize(): bool
     {
         $user = $this->user();
-        $clientId = $this->input('client_id');
+        $organizationId = $this->input('client_id');
         
         if ($user->isSystemUser()) {
             return true;
         }
 
-        if ($clientId) {
-            $hasAccess = $user->clients()->where('clients.id', $clientId)->exists();
+        if ($organizationId) {
+            $hasAccess = $user->clients()->where('clients.id', $organizationId)->exists();
             
             if (!$hasAccess) {
                 throw new \App\Exceptions\UnauthorizedClientAccessException();

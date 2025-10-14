@@ -18,7 +18,7 @@ class LabelUpdateRequest extends FormRequest
         }
 
         if ($organizationId) {
-            $hasAccess = $user->clients()->where('clients.id', $clientId)->exists();
+            $hasAccess = $user->clients()->where('clients.id', $organizationId)->exists();
             
             if (!$hasAccess) {
                 throw new \App\Exceptions\UnauthorizedClientAccessException();
