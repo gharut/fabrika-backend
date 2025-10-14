@@ -10,12 +10,12 @@ class BrandCreateRequest extends FormRequest
     public function authorize(): bool
     {
         $user = $this->user();
-        
-        if ($user->hasRole('super-admin')) {
+        $clientId = $this->input('client_id');
+
+        if ($user->isSystemUser()) {
             return true;
         }
-
-        $clientId = $this->input('client_id');
+        
         if ($clientId) {
             $hasAccess = $user->clients()->where('clients.id', $clientId)->exists();
             

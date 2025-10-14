@@ -11,10 +11,20 @@ class LabelUpdateRequest extends FormRequest
     public function authorize(): bool
     {
         $user = $this->user();
-        $clientId = $this->input('client_id');
+        $organizationId = $this->input('client_id');
         
-        if ($clientId) {
-            return $user->organizationParticipants()->where('client_id', $clientId)->exists();
+        if ($user->isSystemUser()) {
+            return true;
+        }
+
+        if ($organizationId) {
+            $hasAccess = $user->clients()->where('clients.id', $clientId)->exists();
+            
+            if (!$hasAccess) {
+                throw new \App\Exceptions\UnauthorizedClientAccessException();
+            }
+            
+            return true;
         }
         
         return $user !== null;

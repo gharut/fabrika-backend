@@ -3,17 +3,24 @@
 namespace App\Services;
 
 use App\Mail\InvitationMail;
+use App\Models\OrganizationParticipant;
 use App\Models\Invitation;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\Client;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use App\Services\OrganizationParticipantService;
 use Spatie\Permission\PermissionRegistrar;
 
 class InvitationService
 {
+    public function __construct(
+        private readonly OrganizationParticipantService $participantsService
+    ) {}
+
     public function accept(string $token): array
     {
         $user = Auth::user();
@@ -49,16 +56,25 @@ class InvitationService
                 ];
             }
 
-            DB::table('organization_participants')->upsert([[
-                'organization_id' => $inv->client_id,
-                'model_type' => \App\Models\User::class,
-                'model_id' => $user->id,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]], uniqueBy: ['organization_id', 'model_type', 'model_id'], update: ['updated_at']);
-            $role = Role::findOrFail($inv->role_id);
-            app(PermissionRegistrar::class)->setPermissionsTeamId($inv->client_id);
-            $user->syncRoles([$role->name]);
+            $organizationId = $inv->client_id;
+            $roleId = $inv->role_id;
+            $modelId = $user->id;
+            
+            DB::transaction(function () use ($organizationId, $modelId, $roleId) {
+                $participant = OrganizationParticipant::create([
+                    'organization_id' => $organizationId,
+                    'model_type'      => User::class,
+                    'model_id'        => $modelId,
+                ]);
+
+                $this->participantsService->updateUserRole($organizationId, $modelId, $roleId);
+                $participant->load(['user.roles', 'client']);
+
+                $org = Client::withoutGlobalScopes()->find($organizationId);
+                if ($org && $org->is_fulfillment) {
+                    $this->participantsService->propagateUserFromFulfillmentToParents($organizationId, $modelId);
+                }
+            });
 
             $inv->accepted_at = now();
             $inv->save();

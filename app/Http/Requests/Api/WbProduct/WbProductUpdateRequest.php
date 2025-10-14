@@ -13,7 +13,7 @@ class WbProductUpdateRequest extends FormRequest
         $user = $this->user();
         $clientId = $this->input('client_id');
         
-        if ($user->hasRole('super-admin')) {
+        if ($user->isSystemUser()) {
             return true;
         }
 

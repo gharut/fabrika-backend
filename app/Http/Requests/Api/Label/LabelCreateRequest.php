@@ -13,6 +13,10 @@ class LabelCreateRequest extends FormRequest
         $user = $this->user();
         $clientId = $this->input('client_id');
         
+        if ($user->isSystemUser()) {
+            return true;
+        }
+
         if ($clientId) {
             $hasAccess = $user->clients()->where('clients.id', $clientId)->exists();
             

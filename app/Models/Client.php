@@ -55,7 +55,7 @@ class Client extends Model
                 return;
             }
 
-            if ($user->hasRole('super-admin')) {
+            if ($user->isSystemUser()) {
                 return;
             }
 

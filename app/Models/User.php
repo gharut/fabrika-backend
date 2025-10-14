@@ -80,9 +80,15 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function clients()
     {
-        return $this->belongsToMany(Client::class, 'organization_participants', 'user_id', 'client_id')
-            ->withPivot('role_id')
-            ->withTimestamps();
+        return $this->belongsToMany(
+            Client::class,
+            'organization_participants',
+            'model_id',
+            'organization_id'
+        )
+        ->wherePivot('model_type', self::class)
+        ->withPivot('role_id')
+        ->withTimestamps();
     }
 
     public function systemAccount()

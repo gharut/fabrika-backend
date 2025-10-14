@@ -14,9 +14,10 @@ class OrganizationParticipantCreateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'client_id' => ['required', 'exists:clients,id'],
-            'user_id'   => ['required', 'exists:users,id'],
-            'role'      => ['required', 'exists:roles,id'],
+            'organization_id' => ['required', 'exists:clients,id'],
+            'model_id'   => ['required'],
+            'model_type'   => ['required'],
+            'role_id'      => ['required', 'exists:roles,id'],
         ];
     }
 }
