@@ -19,7 +19,8 @@ return new class extends Migration
 
             $table->string('order_by_field')->nullable();
             $table->string('order_direction')->nullable();
-
+            
+            $table->foreignId('client_id')->constrained('clients')->restrictOnDelete();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
 

@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Concerns\BelongsToClient;
 
 class PricingStrategy extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, BelongsToClient;
 
     public const TYPE_TIME_DISCOUNT = 'time_discount';
 
