@@ -28,6 +28,7 @@ class WbProduct extends Model
         'is_wb_import',
         'created_by',
         'updated_by',
+        'account_id'
     ];
 
     protected $casts = [
@@ -37,6 +38,8 @@ class WbProduct extends Model
 
     protected $appends = ['wb_category'];
 
+    protected $hidden = ['wbCategoryLink'];
+    
     public function wbCategoryLink(): HasOne
     {
         return $this->hasOne(ProductMarketplaceCategory::class, 'product_id')
@@ -51,6 +54,16 @@ class WbProduct extends Model
     {
         return $this->hasMany(ProductMarketplaceCategory::class, 'product_id')
             ->where('marketplace_code', 'wb');
+    }
+
+    public function inventoryLevels()
+    {
+        return $this->hasMany(InventoryLevel::class, 'product_id');
+    }
+
+    public function productPrices()
+    {
+        return $this->hasMany(\App\Models\ProductPrice::class, 'product_id');
     }
 
     public function getWbCategoryAttribute(): ?array

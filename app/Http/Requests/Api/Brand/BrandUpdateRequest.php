@@ -17,7 +17,7 @@ class BrandUpdateRequest extends FormRequest
         }
 
         if ($organizationId) {
-            $hasAccess = $user->clients()->where('clients.id', $organizationId)->exists();
+            $hasAccess = $user->hasAnyRoleInOrg($organizationId);
             
             if (!$hasAccess) {
                 throw new \App\Exceptions\UnauthorizedClientAccessException();

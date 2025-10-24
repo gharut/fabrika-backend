@@ -34,8 +34,8 @@ class WbService
 
     public function importWbProducts(int $marketplaceAccountId, int $limit = 100): array
     {
-         try {
-           $marketplaceAccount = $this->getMarketplaceAccountWbToken($marketplaceAccountId);
+        try {
+            $marketplaceAccount = $this->getMarketplaceAccountWbToken($marketplaceAccountId);
             if (!$marketplaceAccount['success']) {
                 return [
                     'success' => false,
@@ -57,8 +57,12 @@ class WbService
 
             $stats = $this->insertProducts(
                 wbCards: $allCards,
-                clientId: $clientId
+                clientId: $clientId,
+                accountId: $marketplaceAccountId
             );
+
+            $syncProductPrice = app(\App\Services\WB\ProductPriceSyncService::class);
+            $syncProductPriceCount = $syncProductPrice->syncAll($this->apiToken);
 
             return [
                 'success'          => $stats['success'],
@@ -66,6 +70,7 @@ class WbService
                 'updated'          => $stats['statistics']['products_updated'] ?? 0,
                 'total_processed'  => $stats['statistics']['total_processed'] ?? 0,
                 'errors'           => $stats['statistics']['errors'] ?? [],
+                'sync_product_price_count' => $syncProductPriceCount ?? 00,
             ];
         } catch (\Exception $e) {
             Log::error('WB API Error', ['error' => $e->getMessage()]);
@@ -189,7 +194,7 @@ class WbService
         }
     }
 
-    public function insertProducts(array $wbCards, int $clientId): array
+    public function insertProducts(array $wbCards, int $clientId, int $accountId): array
     {
         $result = [
             'success' => true,
@@ -228,6 +233,7 @@ class WbService
                     'has_chestny_znak' =>  false,
                     'brand_id' => $brandId,
                     'is_wb_import' => true,
+                    'account_id' => $accountId,
                 ];
 
                 $existingProduct = WbProduct::where('article', $nmID)

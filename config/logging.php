@@ -73,7 +73,14 @@ return [
             'replace_placeholders' => true,
         ],
 
-         'jobs' => [
+        'wb-api' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/wb-api.log'),
+            'level' => 'info',
+            'days' => 14,
+        ],
+
+        'jobs' => [
             'driver' => 'daily',
             'path' => storage_path('logs/jobs.log'),
             'level' => 'info',

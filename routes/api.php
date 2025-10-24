@@ -19,11 +19,17 @@ use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ProductSizeController;
 use App\Http\Controllers\Api\MarketplaceCategoryController;
+use App\Http\Controllers\Api\SystemTextController;
+use App\Http\Controllers\Api\PricingStrategyController;
+use App\Http\Controllers\Api\StrategyItemController;
+
 use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\PermissionRegistrar;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Facades\Gate;
+
+use App\Services\Wb\WbWarehouseRemainsImporter;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -40,6 +46,11 @@ Route::group([
     Route::post('request-password', [AuthController::class, 'requestPasswordReset']);
 });
 
+Route::group([
+    'namespace' => 'App\Http\Controllers\Api',
+], function() {
+    Route::get('system-texts/{key}', [SystemTextController::class, 'show']);
+});
 
 Route::group([
     'middleware'=> ['auth:sanctum'],
@@ -49,12 +60,24 @@ Route::group([
     Route::get('client-users/clients', [OrganizationParticipantController::class, 'getClientsByUser']);
     Route::get('profile/send-verification-email', [ProfileController::class, 'sendVerificationEmail']);
     Route::post('profile/verify-email', [ProfileController::class, 'verifyByToken']);
+
+    Route::prefix('system-texts')->group(function () {
+        Route::get('/', [SystemTextController::class, 'index']);
+        Route::middleware('cper:edit-sys-text')->post('/', [SystemTextController::class, 'store']);
+        Route::middleware('cper:edit-sys-text')->put('/{systemText}', [SystemTextController::class, 'update']);
+        Route::middleware('cper:edit-sys-text')->delete('/{systemText}', [SystemTextController::class, 'destroy']);
+    });
 });
 
 Route::group([
     'middleware'=> ['auth:sanctum', 'current.client'],
     'namespace' => 'App\Http\Controllers\Api',
 ], function() {
+    Route::get('/test-wb-stocks', function (WbWarehouseRemainsImporter $importer) {
+        $importer->runForAllAccounts();
+        return 'OK';
+    });
+
     Route::middleware('cper:import-wb-product')->post('wb/import-product', [\App\Http\Controllers\Api\WbController::class, 'import']);
     
     Route::get('/file-operations', [FileOperationController::class, 'index']);
@@ -75,10 +98,22 @@ Route::group([
     Route::post('labels-pdf/print', [\App\Http\Controllers\Api\LabelDesignerController::class, 'print']);
     Route::post('labels-pdf/preview', [\App\Http\Controllers\Api\LabelDesignerController::class, 'preview']);
 
-    // TO DO: Акции в WB
-    // Route::post('/wb-promo/start', [\App\Http\Controllers\Api\PromoController::class, 'start']);
-    // Route::post('/wb-promo/revert', [\App\Http\Controllers\Api\PromoController::class, 'revert']);
-    // Route::get('/wb-promo/status', [\App\Http\Controllers\Api\PromoController::class, 'status']);
+    Route::prefix('pricing-strategies')->group(function () {
+        Route::post('/', [PricingStrategyController::class, 'store']);
+        Route::get('/', [PricingStrategyController::class, 'index']);
+        Route::get('{id}', [PricingStrategyController::class, 'show']);
+        Route::patch('{id}', [PricingStrategyController::class, 'update']);
+        Route::delete('{id}', [PricingStrategyController::class, 'destroy']);
+        Route::post('{id}/run', [PricingStrategyController::class, 'run']);
+        Route::post('{id}/items', [PricingStrategyController::class, 'addItems']);
+        Route::get('{id}/items', [PricingStrategyController::class, 'items']);
+        Route::get('{id}/available-items', [PricingStrategyController::class, 'availableProducts']);
+    });
+
+    Route::prefix('strategy-items')->group(function () {
+        Route::patch('{id}', [StrategyItemController::class, 'update']);
+        Route::delete('{id}', [StrategyItemController::class, 'destroy']);
+    });
 
     Route::prefix('wb-products')->group(function () {
         Route::middleware('cper:view-products')->post('sizes', [\App\Http\Controllers\Api\WbProductController::class, 'getAllWithSizes']);

@@ -11,13 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('promo_campaigns', function (Blueprint $table) {
+        Schema::create('system_texts', function (Blueprint $table) {
             $table->id();
-            $table->string('external_id', 100)->nullable();
-
-            $table->enum('status', [
-                'queued','snapshotting','applied','reverting','reverted','failed'
-            ])->default('queued');
+            $table->string('title');
+            $table->string('key')->unique();
+            $table->longText('content')->nullable();
             $table->timestamps();
         });
     }
@@ -27,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('promo_campaigns');
+        Schema::dropIfExists('system_texts');
     }
 };

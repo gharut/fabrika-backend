@@ -91,6 +91,15 @@ class User extends Authenticatable implements MustVerifyEmail
         ->withTimestamps();
     }
 
+    public function hasAnyRoleInOrg(int $organizationId): bool
+    {
+        return DB::table('model_has_roles')
+            ->where('model_type', self::class)
+            ->where('model_id', $this->id)
+            ->where('client_id', $organizationId)
+            ->exists();
+    }
+
     public function systemAccount()
     {
         return $this->hasOne(SystemAccount::class);
