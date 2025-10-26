@@ -118,9 +118,6 @@ class ProcessPdfImportJob implements ShouldQueue
                 $createdCount += $result['created_count'] ?? 0;
                 $errors = array_merge($errors, $result['errors'] ?? []);
                 $processedPages++;
-
-                $progress = (int) round(($processedPages / max($totalPages, 1)) * 100);
-                $op->update(['progress' => $progress]);
             }
 
             $totalCodes = array_sum(array_map(fn($p) => count($p['codes'] ?? []), $pages));
@@ -146,7 +143,6 @@ class ProcessPdfImportJob implements ShouldQueue
                 'status' => $totalErrors > 0 ? FileOperation::STATUS_PARTIAL_SUCCESS : FileOperation::STATUS_SUCCESS,
                 'error_message' => json_encode($errorSummary, JSON_UNESCAPED_UNICODE),
                 'finished_at' => now(),
-                'progress' => 100,
             ]);
 
             Log::channel('jobs')->info('ProcessPdfImportJob завершена', [

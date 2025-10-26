@@ -12,7 +12,7 @@ use App\Models\InventoryLevel;
 use App\Models\ProductSize;
 use App\Models\WbProduct;
 
-class WbWarehouseRemainsImporter
+class InventoryLevelSyncService
 {
     protected string $base;
     protected string $token;
@@ -21,8 +21,6 @@ class WbWarehouseRemainsImporter
     {
         $this->logUid = uniqid('wb_', true);
         $this->base = 'https://statistics-api.wildberries.ru/api/v1';
-        // $this->apiToken = '';
-        $this->token = 'eyJhbGciOiJFUzI1NiIsImtpZCI6IjIwMjUwNTIwdjEiLCJ0eXAiOiJKV1QifQ.eyJlbnQiOjEsImV4cCI6MTc3MDUwMDcxOSwiaWQiOiIwMTk4OGUzOC02Yzc4LTcyNTktYWM1Mi0zNmU3OWUyNjIyMzEiLCJpaWQiOjIxNDA2MTIsIm9pZCI6MTE3NzUxMCwicyI6MTYxMjYsInNpZCI6ImFlNjg2Y2MyLWQ5MTAtNGY2ZC1iNzc5LWM4OWZiNTllZWY1MCIsInQiOmZhbHNlLCJ1aWQiOjIxNDA2MTJ9.NsVJOq-s1X-5Xee1Buzp2WS81uIeVy7Ee34Ov1MgXX5RdNQaG32Ap1Q7KoubK9bapYs0BZe2N8YQSD8Scbm-PQ';
     }
 
     protected function headers(): array
@@ -66,6 +64,53 @@ class WbWarehouseRemainsImporter
             $this->log("Завершение импорта для магазина ID {$account->id}");
         }
         $this->log("Завершение процесса обновления остатков");
+    }
+
+    public function syncStock(int $id)
+    {
+        $result = (object)[
+            'success'  => false,
+            'message'  => ''
+        ];
+
+        $account = MarketplaceAccount::where('platform', 'WB')->find($id);
+
+        if (!$account) {
+            $this->log("Аккаунт не найден по токену");
+            $result->message = "Аккаунт не найден по токену";
+            return $result;
+        }
+
+        $this->token  = $account->api_token_enc;
+        $this->logUid = uniqid("wb_{$account->id}_", true);
+        $this->log("Начало импорта для магазина ID {$account->id}, client_id {$account->client_id}");
+
+        try {
+            $hasProducts = WbProduct::where('client_id', $account->client_id)
+                ->where('is_wb_import', true)
+                ->exists();
+
+            if (! $hasProducts) {
+                $this->log('Нет товаров для импорта, пропускаем аккаунт');
+                $result->message = "Нет товаров для импорта, пропускаем аккаунт";
+                return $result;
+            }
+
+            $this->run();
+            $result->success = true;
+            return $result;
+        } catch (\Throwable $e) {
+            $this->log('Ошибка при импорте', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            $result->message = $e->getMessage();
+            return $result;
+        }
+
+        $this->log("Завершение импорта для магазина ID {$account->id}");
+        $result->success = true;
+        return $result;
     }
 
     public function run(): void

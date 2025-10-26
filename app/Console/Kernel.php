@@ -13,7 +13,8 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         // $schedule->command('inspire')->hourly();
-        $schedule->command('strategies:run-active')->everyThirtyMinutes()->withoutOverlapping();
+        // $schedule->command('app:run-strategies')->everyThirtyMinutes()->withoutOverlapping();
+        $schedule->command('app:sync-wb-data')->hourly();
     }
 
     /**

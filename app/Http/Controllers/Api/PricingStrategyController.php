@@ -101,6 +101,23 @@ class PricingStrategyController extends Controller
         return response()->json(['added' => $count], 201, [], JSON_UNESCAPED_UNICODE);
     }
 
+    public function updateItemsTime(Request $request, int $id)
+    {
+        $data = $request->validate([
+            'field' => 'required|string|in:starts_at,ends_at',
+            'value' => [
+                'required',
+                'string',
+                'regex:/^([0-1][0-9]|2[0-3]):(00|30)$/'
+            ],
+        ]);
+
+        $field = $data['field'];
+        $value = $data['value'];
+        $count = $this->itemService->updateItemsTime($id, $field, $value);
+        return response()->json(['updated' => $count], 200, [], JSON_UNESCAPED_UNICODE);
+    }
+
     private function formatTime($value)
     {
         return $value ? substr($value, 0, 5) : null;
@@ -108,8 +125,22 @@ class PricingStrategyController extends Controller
 
     public function items(Request $request, int $id)
     {
-        $perPage = $request->integer('perPage', 50);
-        $list = $this->itemService->listByStrategy($id, $perPage);
+        $validated = $request->validate([
+            'filters' => 'sometimes|array',
+            'sort_by' => 'sometimes|string',
+            'sort_dir' => 'sometimes|in:asc,desc',
+            'page' => 'sometimes|integer|min:1',
+            'per_page' => 'sometimes|integer|min:1|max:100',
+        ]);
+        
+        $sortBy = $validated['sort_by'] ?? 'created_at';
+        $sortDir = $validated['sort_dir'] ?? 'desc';
+        $filters = $validated['filters'] ?? [];
+
+        $perPage = $validated['per_page'] ?? 10;
+        $page = $validated['page'] ?? 1;
+
+        $list = $this->itemService->listByStrategy($id, $filters, $sortBy, $sortDir, $page, $perPage);
 
         $list->getCollection()->transform(function ($item) {
             $product = $item->wbProduct;
@@ -118,7 +149,7 @@ class PricingStrategyController extends Controller
                 'id'             => $item->id,
                 'status'         => $item->status,
                 'discount'       => $item->discount,
-                'temp_discount'  => $item->temp_discount,
+                'temp_discount'  => round($item->temp_discount),
                 'starts_at'      => $this->formatTime($item->starts_at),
                 'ends_at'        => $this->formatTime($item->ends_at),
                 'total_qty'      => $item->total_qty,
@@ -129,6 +160,7 @@ class PricingStrategyController extends Controller
                     'name'        => $product->name,
                     'color'       => $product->color,
                     'image'       => $product->image,
+                    'product'     => $product,
                 ] : null,
             ];
         });
@@ -138,13 +170,26 @@ class PricingStrategyController extends Controller
 
     public function availableProducts(Request $request, int $id)
     {
-        $perPage = $request->integer('perPage', 50);
+        $validated = $request->validate([
+            'filters' => 'sometimes|array',
+            'sort_by' => 'sometimes|string',
+            'sort_dir' => 'sometimes|in:asc,desc',
+            'page' => 'sometimes|integer|min:1',
+            'per_page' => 'sometimes|integer|min:1|max:100',
+        ]);
 
+        $sortBy = $validated['sort_by'] ?? 'created_at';
+        $sortDir = $validated['sort_dir'] ?? 'desc';
+        $filters = $validated['filters'] ?? [];
+
+        $perPage = $validated['per_page'] ?? 10;
+        $page = $validated['page'] ?? 1;
+        
         if ($id == null || $id <= 0) {
             return [];
         }
 
-        return $this->itemService->getAvailableProducts($id, $perPage);
+        return $this->itemService->getAvailableProducts($id, $filters, $sortBy, $sortDir, $perPage, $page);
     }
 
     public function destroy(int $id)

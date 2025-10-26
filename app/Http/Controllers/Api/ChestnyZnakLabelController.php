@@ -2,22 +2,30 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Services\ChestnyZnakLabelService;
-use App\Models\ChestnyZnakLabel;
 use App\Services\LabelPdfService;
+
+use App\Models\ChestnyZnakLabel;
+use App\Models\FileOperation;
+use App\Models\LabelPrintOptions;
+
+use App\Jobs\ProcessPdfImportJob;
+use App\Support\ClientContext;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\ChestnyZnakLabel\ChestnyZnakLabelImportRequest;
+
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use App\Models\LabelPrintOptions;
 use Illuminate\Support\Facades\Storage;
-use App\Jobs\ProcessPdfImportJob;
-use App\Models\FileOperation;
 use Illuminate\Support\Facades\Auth;
 
 class ChestnyZnakLabelController extends Controller
 {
-    public function __construct(private ChestnyZnakLabelService $service, private LabelPdfService $labelPdfService) {}
+    public function __construct(
+        private ChestnyZnakLabelService $service, 
+        private LabelPdfService $labelPdfService,
+        private ClientContext $clientContext
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -45,7 +53,7 @@ class ChestnyZnakLabelController extends Controller
         }
 
         // Стандартный запрос без группировки
-        $query = ChestnyZnakLabel::with(['size.product']);
+        $query = ChestnyZnakLabel::with(['size.product', 'usedBy:id,name', 'creator:id,name']);
 
         // Применяем фильтры
         if (!empty($validated['filters'])) {
@@ -64,7 +72,25 @@ class ChestnyZnakLabelController extends Controller
         $labels = $query->paginate($perPage, ['*'], 'page', $page);
 
         return response()->json([
-            'data' => $labels->items(),
+            'data' => $labels->getCollection()->transform(function ($label) {
+                return [
+                    'id'          => $label->id,
+                    'code'        => $label->code,
+                    'number'      => $label->number,
+                    'status'      => $label->status,
+                    'created_at'  => $label->created_at,
+                    'created_by' => $label->creator ? [
+                            'id'   => $label->creator->id,
+                            'name' => $label->creator->name,
+                        ] : null,
+                    'used_at'     => $label->used_at,
+                    'used_by' => $label->usedBy ? [
+                            'id'   => $label->usedBy->id,
+                            'name' => $label->usedBy->name,
+                        ] : null,
+                    'size' => $label->size ?? null,
+                ];
+            }),
             'meta' => [
                 'current_page' => $labels->currentPage(),
                 'last_page' => $labels->lastPage(),
@@ -75,7 +101,9 @@ class ChestnyZnakLabelController extends Controller
     }
 
     private function getGroupedBySize(array $params): JsonResponse
-    {
+    {   
+        $clientId = $this->clientContext->get();
+
         $query = \DB::table('chestny_znak_labels as czl')
             ->join('product_sizes as ps', 'czl.size_id', '=', 'ps.id')
             ->join('wb_products as p', 'ps.product_id', '=', 'p.id')
@@ -90,6 +118,7 @@ class ChestnyZnakLabelController extends Controller
                 \DB::raw('SUM(CASE WHEN czl.status = "used" THEN 1 ELSE 0 END) as used'),
                 \DB::raw('SUM(CASE WHEN czl.status = "available" THEN 1 ELSE 0 END) as unused'),
             ])
+            ->when($clientId, fn($q) => $q->where('czl.client_id', $clientId))
             ->groupBy('ps.id');
 
         if (!empty($params['filters'])) {
@@ -265,8 +294,14 @@ class ChestnyZnakLabelController extends Controller
             $sizeId = (int) ($sizeIds[$idx] ?? 0);
             $path  = $file->getRealPath();
             $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-            $result = $this->service->importCsv($sizeId, $lines);
+            $fileName = $file->getClientOriginalName();
+            $fileSize = $file->getSize();
 
+            if (strtolower((string) $file->getClientOriginalExtension()) !== 'csv') {
+                continue;
+            }
+
+            $result = $this->service->importCsv($sizeId, $lines, $fileName, $fileSize);
             $fileResults[] = [
                 'fileName' => $file->getClientOriginalName(),
                 'created'  => $result['created_count'] ?? 0,
@@ -311,7 +346,6 @@ class ChestnyZnakLabelController extends Controller
                 'file_size'      => $file->getSize(),
                 'user_id'        => $userId,
                 'status'         => FileOperation::STATUS_IN_PROGRESS,
-                'progress'       => 0,
                 'related_to'     => 'ChestnyZnakLabel',
             ]);
 

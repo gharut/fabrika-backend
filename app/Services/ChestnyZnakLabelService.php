@@ -87,14 +87,14 @@ class ChestnyZnakLabelService
         return $label;
     }
 
-    public function importCsv(int $sizeId, array $codes): array
+    public function importCsv(int $sizeId, array $codes, string $fileName, string $fileSize): array
     {
         $userId = Auth::id();
         $operation = FileOperation::create([
             'operation_type' => 'import',
-            'file_name' => '',
+            'file_name' => $fileName,
             'file_extension' => 'csv',
-            'file_size' => null,
+            'file_size' => $fileSize,
             'user_id' => $userId,
             'status' => FileOperation::STATUS_IN_PROGRESS,
             'related_to' => 'ChestnyZnakLabel',

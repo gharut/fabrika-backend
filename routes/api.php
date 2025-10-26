@@ -29,8 +29,6 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Facades\Gate;
 
-use App\Services\Wb\WbWarehouseRemainsImporter;
-
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
@@ -73,11 +71,6 @@ Route::group([
     'middleware'=> ['auth:sanctum', 'current.client'],
     'namespace' => 'App\Http\Controllers\Api',
 ], function() {
-    Route::get('/test-wb-stocks', function (WbWarehouseRemainsImporter $importer) {
-        $importer->runForAllAccounts();
-        return 'OK';
-    });
-
     Route::middleware('cper:import-wb-product')->post('wb/import-product', [\App\Http\Controllers\Api\WbController::class, 'import']);
     
     Route::get('/file-operations', [FileOperationController::class, 'index']);
@@ -105,9 +98,10 @@ Route::group([
         Route::patch('{id}', [PricingStrategyController::class, 'update']);
         Route::delete('{id}', [PricingStrategyController::class, 'destroy']);
         Route::post('{id}/run', [PricingStrategyController::class, 'run']);
-        Route::post('{id}/items', [PricingStrategyController::class, 'addItems']);
-        Route::get('{id}/items', [PricingStrategyController::class, 'items']);
-        Route::get('{id}/available-items', [PricingStrategyController::class, 'availableProducts']);
+        Route::post('{id}/add-items', [PricingStrategyController::class, 'addItems']);
+        Route::post('{id}/get-items', [PricingStrategyController::class, 'items']);
+        Route::post('{id}/available-items', [PricingStrategyController::class, 'availableProducts']);
+        Route::patch('{id}/update-time', [PricingStrategyController::class, 'updateItemsTime']);
     });
 
     Route::prefix('strategy-items')->group(function () {

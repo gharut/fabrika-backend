@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 
 use App\Services\WbProductService;
+use App\Services\Wb\InventoryLevelSyncService;
 
 use App\Models\WbProduct;
 use App\Models\ProductSize;
@@ -25,7 +26,8 @@ use Carbon\Carbon;
 class WbService
 {
     public function __construct(
-        private WbProductService $wbProductService
+        private WbProductService $wbProductService,
+        private InventoryLevelSyncService $syncInventoryLevel
     ) {}
     
     private string $apiToken = '';
@@ -62,7 +64,8 @@ class WbService
             );
 
             $syncProductPrice = app(\App\Services\WB\ProductPriceSyncService::class);
-            $syncProductPriceCount = $syncProductPrice->syncAll($this->apiToken);
+            $syncProductPriceCount = $syncProductPrice->syncPrice($this->apiToken);
+            $inventoryLevelsImporResult = $this->syncInventoryLevel->syncStock($marketplaceAccountId);
 
             return [
                 'success'          => $stats['success'],
@@ -70,7 +73,8 @@ class WbService
                 'updated'          => $stats['statistics']['products_updated'] ?? 0,
                 'total_processed'  => $stats['statistics']['total_processed'] ?? 0,
                 'errors'           => $stats['statistics']['errors'] ?? [],
-                'sync_product_price_count' => $syncProductPriceCount ?? 00,
+                'sync_product_price_count' => $syncProductPriceCount ?? 0,
+                'sync_product_stock_count' => $inventoryLevelsImporResult->success,
             ];
         } catch (\Exception $e) {
             Log::error('WB API Error', ['error' => $e->getMessage()]);

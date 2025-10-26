@@ -14,7 +14,7 @@ class ProductPriceSyncService
     /**
      * Синхронизировать цены и скидки из WB API
      */
-    public function syncAll(string $wbToken, int $limit = 1000): int
+    public function syncPrice(string $wbToken, int $limit = 1000): int
     {
         $endpoint = 'https://discounts-prices-api.wildberries.ru/api/v2/list/goods/filter';
 

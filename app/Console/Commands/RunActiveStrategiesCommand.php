@@ -8,7 +8,7 @@ use App\Jobs\RunPricingStrategyJob;
 
 class RunActiveStrategiesCommand extends Command
 {
-    protected $signature = 'strategies:run-active';
+    protected $signature = 'app:run-strategies';
     protected $description = 'Запускает активные ценовые стратегии по расписанию';
 
     public function handle(): int
