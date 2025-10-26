@@ -19,8 +19,10 @@ class ProductSizeService
                     $q->where('status', 'used');
                 },
                 'chestnyZnakLabels as total_count'
-            ]);
-        if ($productId !== null) {
+            ])
+            ->withSum('inventoryLevels as stock', 'qty');;
+        
+            if ($productId !== null) {
             $query->where('product_id', $productId);
         }
 

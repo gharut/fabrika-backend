@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\WbProduct;
 use App\Models\Label;
 use App\Models\ProductImage;
+use App\Models\InventoryLevel;
 use App\Models\ProductMarketplaceCategory;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
@@ -59,7 +60,9 @@ class WbProductService
                 'main_image_url' => ProductImage::select('url')
                     ->whereColumn('product_id', 'wb_products.id')
                     ->orderBy('position')
-                    ->limit(1)
+                    ->limit(1),
+                'stock' => InventoryLevel::select(DB::raw('COALESCE(SUM(qty), 0)'))
+                    ->whereColumn('product_id', 'wb_products.id')
             ]);
 
         $applyFilter = function ($q, $filter) use (&$applyFilter) {

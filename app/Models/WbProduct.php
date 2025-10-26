@@ -34,6 +34,7 @@ class WbProduct extends Model
     protected $casts = [
         'has_chestny_znak' => 'boolean',
         'is_wb_import' => 'boolean',
+        'stock' => 'integer',
     ];
 
     protected $appends = ['wb_category'];

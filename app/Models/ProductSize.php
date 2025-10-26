@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\ChestnyZnakLabel;
+use App\Models\InventoryLevel;
 
 class ProductSize extends Model
 {
@@ -22,6 +23,7 @@ class ProductSize extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
+        'stock'      => 'integer',
     ];
 
     public function product()
@@ -32,5 +34,10 @@ class ProductSize extends Model
     public function chestnyZnakLabels()
     {
         return $this->hasMany(ChestnyZnakLabel::class, 'size_id');
+    }
+
+    public function inventoryLevels()
+    {
+        return $this->hasMany(InventoryLevel::class, 'size_id');
     }
 }
