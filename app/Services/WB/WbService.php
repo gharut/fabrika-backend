@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Wb;
+namespace App\Services\WB;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 
 use App\Services\WbProductService;
-use App\Services\Wb\InventoryLevelSyncService;
+use App\Services\WB\InventoryLevelSyncService;
 
 use App\Models\WbProduct;
 use App\Models\ProductSize;
