@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Wb;
+namespace App\Services\WB;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
