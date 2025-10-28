@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Models\PricingStrategy;
+use App\Models\MarketplaceAccount;
 use App\Models\StrategyItem;
+use App\Models\ProductPrice;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +22,14 @@ class PricingStrategyService
     {
         return DB::transaction(function () use ($data) {
             $attrs = Arr::only($data, [
-                'name','type','status','order_by_field','order_direction','created_by','updated_by'
+                'name',
+                'type',
+                'status',
+                'order_by_field',
+                'order_direction',
+                'account_id',
+                'created_by',
+                'updated_by',
             ]);
 
             $attrs['type']   = $attrs['type']   ?? PricingStrategy::TYPE_TIME_DISCOUNT;
@@ -38,45 +47,87 @@ class PricingStrategyService
             return null;
         }
 
-        $strategy->fill($data);
-        $strategy->save();
+        $strategy->fill(Arr::only($data, [
+            'name',
+            'type',
+            'status',
+            'order_by_field',
+            'order_direction',
+            'updated_by',
+            'account_id',
+        ]));
 
+        $strategy->save();
         return $strategy->fresh(['items']);
     }
 
-    public function run(int $strategyId, string $wbToken): array
+    private function getSkipResult(PricingStrategy $strategy, string $msg)
     {
-        // Поиск
+        return [
+            'strategyId' => $strategy->id,
+            'status'     => $strategy->status,
+            'applied'    => 0,
+            'skipped'    => 0,
+            'message'    => $msg,
+        ];
+    }
+
+    public function upsertTempPrice(int $productId, int $strategyItemId, float $value): ProductPrice
+    {
+        $discount = (float) round($value);
+        $discount = max(0, min(100, $discount));
+
+        return ProductPrice::updateOrCreate(
+            [
+                'product_id'       => $productId,
+                'strategy_item_id' => $strategyItemId,
+                'type'             => 'temp_discount',
+            ],
+            [ 'value' => $discount, ]
+        );
+    }
+
+    public function getTempPrice(int $productId, int $strategyItemId): float
+    {
+        return (float) (
+            ProductPrice::where([
+                    'product_id'       => $productId,
+                    'strategy_item_id' => $strategyItemId,
+                    'type'             => 'temp_discount',
+                ])
+                ->value('value') ?? 0.0
+        );
+    }
+
+    public function run(int $strategyId): array
+    {
         $strategy = PricingStrategy::findOrFail($strategyId);
 
-        // Проверка статуса стратегии
         if ($strategy->status !== PricingStrategy::STATUS_ACTIVE) {
-            return [
-                'strategyId' => $strategy->id,
-                'status'     => $strategy->status,
-                'applied'    => 0,
-                'skipped'    => 0,
-                'message'    => 'Пропущена, так как стратегия неактивна',
-            ];
+            return $this->getSkipResult($strategy, 'Пропущена, так как стратегия неактивна');
         }
 
-        // Проверка типа стратегии
+        $accountId = $strategy->account_id;
+        if (empty($accountId)) {
+            return $this->getSkipResult($strategy, 'Пропущена, так как у стратегии не указан кабинет маркетплейса');
+        }
+
+        $wbToken = MarketplaceAccount::where('id', $accountId)->value('api_token_enc');
+        if (empty($wbToken)) {
+            return $this->getSkipResult($strategy, 'Пропущена, так как не указан API ключ');
+        }
+
         if ($strategy->type !== PricingStrategy::TYPE_TIME_DISCOUNT) {
-            return [
-                'strategyId' => $strategy->id,
-                'status'     => $strategy->status,
-                'applied'    => 0,
-                'skipped'    => 0,
-                'message'    => 'Неподдерживаемый тип у стратегии',
-            ];
+            return $this->getSkipResult($strategy, 'Неподдерживаемый тип у стратегии');
         }
 
-        // Инициализация запроса
         $now = now('Europe/Moscow')->format('H:i:s');
-
         $itemsQuery = StrategyItem::query()
             ->where('strategy_id', $strategy->id)
             ->where('model_type', \App\Models\WbProduct::class)
+            ->whereHas('wbProduct', function ($q) use ($accountId) {
+                $q->where('account_id', $accountId);
+            })
             ->whereNotNull('starts_at')
             ->whereNotNull('ends_at')
             ->where(function ($q) use ($now) {
@@ -103,8 +154,9 @@ class PricingStrategyService
         $skipped = 0;
 
         foreach ($items as $item) {
-            $id       = $item->id;
-            $product  = $item->target;
+            $id        = $item->id;
+            $product   = $item->target;
+            $productId = $product->id;
             $nmId     = (int) ($product->article ?? 0);
 
             $applyTemp = (
@@ -115,11 +167,14 @@ class PricingStrategyService
                 && $item->ends_at >= $now
             );
 
-            $discount = $applyTemp
-                ? (int) round((float) $item->temp_discount)
-                : (int) round((float) $item->discount);
+            $discount = (int) round((float) $item->temp_discount);
+            if ($applyTemp) {
+                $this->upsertTempPrice($productId, $id, $item->discount);
+            } else {
+                $discount = $this->getTempPrice($productId, $id);
+            }
 
-            if ($nmId <= 0 || $discount < 0 || $discount > 100) {
+            if ($nmId <= 0 || $discount <= 0 || $discount >= 100) {
                 $skipped++;
                 continue;
             }
@@ -128,7 +183,7 @@ class PricingStrategyService
                 'id' => $id,
                 'nmId' => $nmId,
                 'discount' => $discount,
-                'productId' => $product->id
+                'productId' => $productId
             ];
 
             if ($nmId > 0) {

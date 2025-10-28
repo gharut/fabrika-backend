@@ -10,6 +10,7 @@ class ProductPrice extends Model
         'product_id',
         'value',
         'type',
+        'strategy_item_id'
     ];
 
     protected $casts = [
@@ -19,5 +20,10 @@ class ProductPrice extends Model
     public function product()
     {
         return $this->belongsTo(WbProduct::class);
+    }
+
+    public function strategyItem()
+    {
+        return $this->belongsTo(StrategyItem::class);
     }
 }

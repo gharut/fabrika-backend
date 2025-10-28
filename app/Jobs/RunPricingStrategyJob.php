@@ -17,6 +17,6 @@ class RunPricingStrategyJob implements ShouldQueue
 
     public function handle(PricingStrategyService $service): void
     {
-        $service->run($this->strategyId, config('wb.token'));
+        $service->run($this->strategyId);
     }
 }

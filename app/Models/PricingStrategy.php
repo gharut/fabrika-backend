@@ -22,6 +22,7 @@ class PricingStrategy extends Model
         'status',
         'order_by_field',
         'order_direction',
+        'account_id',
         'created_by',
         'updated_by',
     ];
@@ -44,6 +45,11 @@ class PricingStrategy extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 
+    public function account()
+    {
+        return $this->belongsTo(MarketplaceAccount::class, 'account_id');
+    }
+    
     public function scopeActive($q)
     {
         return $q->where('status', self::STATUS_ACTIVE);

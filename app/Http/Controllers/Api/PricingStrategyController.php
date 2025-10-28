@@ -23,6 +23,7 @@ class PricingStrategyController extends Controller
             'status'          => 'nullable|string|in:draft,active,paused',
             'order_by_field'  => 'nullable|string|max:64',
             'order_direction' => 'nullable|string|in:asc,desc',
+            'account_id'      => 'nullable|integer|exists:marketplace_accounts,id',
         ]);
 
         $data['created_by'] = auth()->id();
@@ -41,6 +42,7 @@ class PricingStrategyController extends Controller
             'status'          => 'nullable|string|in:draft,active,paused',
             'order_by_field'  => 'nullable|string|max:64',
             'order_direction' => 'nullable|string|in:asc,desc',
+            'account_id'      => 'nullable|integer|exists:marketplace_accounts,id',
         ]);
 
         $data['updated_by'] = auth()->id();
@@ -76,29 +78,21 @@ class PricingStrategyController extends Controller
         return response()->json($strategy, 200, [], JSON_UNESCAPED_UNICODE);
     }
 
-    public function run(Request $request, int $id)
-    {
-        $data = $request->validate([
-            'wbToken' => 'nullable|string',
-        ]);
-
-        $wbToken = $data['wbToken'];
-
-        $res = $this->service->run($id, $wbToken);
-        $code = !empty($res['error']) ? 422 : 200;
-
-        return response()->json($res, $code, [], JSON_UNESCAPED_UNICODE);
-    }
-
     public function addItems(Request $request, int $id)
     {
         $data = $request->validate([
-            'items'                 => 'required|array|min:1',
-            'items.*.model_id'      => 'required|integer|min:1',
+            'items'            => 'required|array|min:1',
+            'items.*.model_id' => 'required|integer|min:1',
         ]);
 
-        $count = $this->itemService->bulkCreate($id, $data['items']);
-        return response()->json(['added' => $count], 201, [], JSON_UNESCAPED_UNICODE);
+        $result = $this->itemService->bulkCreate($id, $data['items']);
+        $status = $result->success ? 201 : 400;
+
+        return response()->json([
+            'success' => $result->success,
+            'created' => $result->created,
+            'message' => $result->message,
+        ], $status, [], JSON_UNESCAPED_UNICODE);
     }
 
     public function updateItemsTime(Request $request, int $id)

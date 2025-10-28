@@ -13,15 +13,13 @@ class RunActiveStrategiesCommand extends Command
 
     public function handle(): int
     {
-        $now = now()->format('H:i:s');
-
         $strategies = PricingStrategy::query()
             ->where('status', 'active')
             ->get();
 
         foreach ($strategies as $strategy) {
             RunPricingStrategyJob::dispatch($strategy->id);
-            $this->info("Стратегия #{$strategy->id} добавлена в очередь на выполнение.");
+            $this->info("Стратегия ID {$strategy->id} добавлена в очередь на выполнение.");
         }
 
         return Command::SUCCESS;

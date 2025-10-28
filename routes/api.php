@@ -97,7 +97,6 @@ Route::group([
         Route::get('{id}', [PricingStrategyController::class, 'show']);
         Route::patch('{id}', [PricingStrategyController::class, 'update']);
         Route::delete('{id}', [PricingStrategyController::class, 'destroy']);
-        Route::post('{id}/run', [PricingStrategyController::class, 'run']);
         Route::post('{id}/add-items', [PricingStrategyController::class, 'addItems']);
         Route::post('{id}/get-items', [PricingStrategyController::class, 'items']);
         Route::post('{id}/available-items', [PricingStrategyController::class, 'availableProducts']);
