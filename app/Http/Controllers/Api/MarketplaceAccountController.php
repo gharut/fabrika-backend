@@ -9,6 +9,7 @@ use App\Models\MarketplaceAccount;
 use App\Services\MarketplaceAccountService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class MarketplaceAccountController extends Controller
 {
@@ -22,10 +23,54 @@ class MarketplaceAccountController extends Controller
         return response()->json($items);
     }
 
+    public function getMarketplacesList(): JsonResponse
+    {
+        try {
+            $marketplaces = MarketplaceAccount::select('id', 'name')
+                ->orderBy('name')
+                ->get();
+            
+            return response()->json([
+                'success' => true,
+                'data' => $marketplaces,
+                'count' => $marketplaces->count()
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch marketplaces list', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Ошибка при получении списка маркетплейсов',
+            ], 500);
+        }
+    }
+
     public function store(MarketplaceAccountCreateRequest $request): JsonResponse
     {
-        $item = $this->service->create($request->validated());
-        return response()->json($item, 201);
+        try {
+            $item = $this->service->create($request->validated());
+            return response()->json([
+                'data' => $item,
+                'success' => true,
+            ], 201);           
+        } catch (ValidationException $e) {
+            $errors = $e->errors();
+            $firstError = reset($errors)[0] ?? 'Ошибка валидации';
+            
+            return response()->json([
+                'success' => false,
+                'message' => $firstError
+            ], 422);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Не удалось добавить магазин'
+            ], 500);
+        }
     }
 
     public function show($id): JsonResponse
@@ -37,14 +82,33 @@ class MarketplaceAccountController extends Controller
 
     public function update(MarketplaceAccountUpdateRequest $request, $id): JsonResponse
     {
-        $marketplaceAccount = MarketplaceAccount::find($id);
-        
-        if (!$marketplaceAccount) {
-            return response()->json(['error' => 'Marketplace account not found'], 404);
+        try {
+            $marketplaceAccount = MarketplaceAccount::find($id);
+            
+            if (!$marketplaceAccount) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Магазин не найден'
+                ], 404);
+            }
+            
+            $item = $this->service->update($marketplaceAccount, $request->validated());
+            return response()->json([
+                'data' => $item,
+                'success' => true,
+            ], 201);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'messages' => $e->errors()
+            ], 422);
+            
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Не удалось обновить аккаунт'
+            ], 500);
         }
-        
-        $item = $this->service->update($marketplaceAccount, $request->validated());
-        return response()->json($item);
     }
 
     public function destroy($id): JsonResponse

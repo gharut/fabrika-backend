@@ -32,6 +32,12 @@ class LabelTemplateSeeder extends Seeder
                 'is_system' => true,
                 'content' => '{"page":{"w":58,"h":40,"pad":1,"grid":0.5,"snap":true},"blocks":[{"id":"t1","type":"text","x":2,"y":2,"w":29.5,"h":3.5,"text":"{{brand}}","style":{"underline":true,"italic":true,"bold":true,"align":"center","size":2.3}},{"id":"toqz7c","type":"text","x":2,"y":5.5,"w":29.5,"h":5.5,"text":"{{name}}","style":{"size":2.2,"align":"center","bold":true}},{"id":"t3zz4v","type":"text","x":2,"y":11.5,"w":29.5,"h":3.5,"text":"{{size}}","style":{"size":2.3}},{"id":"ttgoaw","type":"text","x":2,"y":15,"w":29.5,"h":4,"text":"Цвет: {{color}}","style":{"size":2.3}},{"id":"imgj6bt4","type":"datamatrix","x":32,"y":2,"w":21,"h":21},{"id":"toixha","type":"text","x":32,"y":23.5,"w":23,"h":3,"text":"(01){{gtin}}","style":{"size":1.8}},{"id":"t30gjv","type":"text","x":32,"y":27,"w":23,"h":3,"text":"(21){{serial}}","style":{"size":1.8}},{"id":"t8dj59","type":"text","x":2,"y":19,"w":29.5,"h":5.5,"text":"Состав: {{composition}}","style":{"size":1.9}},{"id":"imgmn34s","type":"barcode","x":2,"y":24.5,"w":28,"h":13.5},{"id":"imgdxfxc","type":"czLogo","x":30.5,"y":30.5,"w":14.5,"h":6},{"id":"tt2tz4","type":"text","x":46,"y":32,"w":9.5,"h":3.5,"text":"{{number}}","style":{"size":2,"align":"center","bold":true}}]}',
             ],
+            [
+                'id' => 4,
+                'name' => 'Совмещенное',
+                'is_system' => true,
+                'content' => '{"page":{"w":58,"h":40,"pad":1,"grid":0.5,"snap":true},"blocks":[{"id":"imgj6bt4","type":"datamatrix","x":33,"y":11,"w":21,"h":21},{"id":"toixha","type":"text","x":33,"y":32.5,"w":23,"h":2.5,"text":"{{gtin}}","style":{"size":1.8}},{"id":"t30gjv","type":"text","x":33,"y":35,"w":23,"h":2.5,"text":"{{serial}}","style":{"size":1.8}},{"id":"t8dj59","type":"text","x":2.5,"y":13.5,"w":29.5,"h":23.5,"text":"<b>{{name}}</b><br><b>Состав:</b> {{composition}}<br><b>Артикул:</b> {{article}}<br><b>Бренд:</b> {{brand}}<br><b>Размер:</b> {{size}}; <b>Цвет:</b> {{color}}<br><b>Импортер:</b> {{client}}<br><b>Адрес:</b> {{shortAddress}}<br><b>Производитель:</b> {{manufacturer}}<br><b>Дата производства:</b> {{manufactureDate}}<br><b>Сделано в {{country}}</b>","style":{"size":1.5,"align":"left"}},{"id":"imgmn34s","type":"barcode","x":4,"y":3,"w":28,"h":12},{"id":"imgdxfxc","type":"czLogo","x":33,"y":6.5,"w":12,"h":3.5},{"id":"imggl5rm","type":"eacLogo","x":33,"y":1.5,"w":16,"h":4.5}]}'
+            ]
         ];
 
         foreach ($templates as $template) {

@@ -7,22 +7,21 @@
     * { box-sizing: border-box; }
     html, body { margin:0; padding:0; }
     body { font-family: DejaVu Sans, sans-serif; }
+    .barcode1d td { padding: 0; margin: 0; }
+    .blk  { position: absolute;  margin: 0; padding: 0; }
+    .logo { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .dm { width: 100%; height: 100%; object-fit: contain; }
+    .text { white-space: pre-line; word-break: break-word; margin:0; padding:0; }
+    .barcode1d table {
+      width: 100% !important;
+      height: 100% !important;
+      border-collapse: collapse;
+    }
     .page {
       position: relative;
       width:  {{ (float)($schema['page']['w'] ?? 58) }}mm;
       height: {{ (float)($schema['page']['h'] ?? 40) }}mm;
     }
-    .blk  { position:absolute;  margin:0; padding:0; }
-    .text { white-space: pre-line; word-break: break-word; margin:0; padding:0; }
-    .barcode1d table {
-    width: 100% !important;
-    height: 100% !important;
-    border-collapse: collapse;
-  }
-  .barcode1d td {
-    padding: 0;
-    margin: 0;
-  }
   </style>
 </head>
 <body>
@@ -40,7 +39,7 @@
 @endphp
 
 
-  @foreach($labels as $label)
+@foreach($labels as $label)
   @foreach($schemas as $index => $schema)
     @php
       $count = 1;
@@ -87,7 +86,7 @@
           @if($type === 'text')
             @php
               $raw = (string)$resolve($b['text'] ?? '', $label);
-              $txt = $raw;
+              $txtHtml = strip_tags($raw, '<b><br>');
             @endphp
             <div class="blk text"
                 style="left:{{$x}}mm;top:{{$y}}mm;width:{{$w}}mm;height:{{$h}}mm;
@@ -96,7 +95,7 @@
                         text-decoration:{{$underline ? 'underline' : 'none'}};
                         font-style:{{$italic ? 'italic' : 'normal'}};">
               <span style="position:relative; top:-{{ round($fs_mm*2.2,2) }}mm;">
-                {{ $txt }}
+                {!! $txtHtml !!}
               </span>
             </div>
 
@@ -111,8 +110,7 @@
               );
             @endphp
 
-              <div class="blk barcode1d"
-                  style="left:{{$x}}mm;top:{{$y}}mm;width:{{$w}}mm;height:{{$h}}mm; text-align:center;">
+              <div class="blk barcode1d" style="left:{{$x}}mm;top:{{$y}}mm;width:{{$w}}mm;height:{{$h}}mm; text-align:center;">
                 {!! $barcodeHtml !!}
                 <style>
                   .barcode1d div {
@@ -127,22 +125,22 @@
           {{-- Datamatrix --}}
           @elseif($type === 'datamatrix')
             @if(!empty($label->barcode2D))
-              <div class="blk"
-                  style="left:{{$x}}mm;top:{{$y}}mm;width:{{$w}}mm;height:{{$h}}mm;">
-                <img src="data:image/png;base64,{{ $label->barcode2D }}"
-                    style="width:100%;height:100%;object-fit:contain;" alt="ЧЗ">
+              <div class="blk" style="left:{{$x}}mm;top:{{$y}}mm;width:{{$w}}mm;height:{{$h}}mm;">
+                <img src="data:image/png;base64,{{ $label->barcode2D }}" class="dm">
               </div>
             @endif
 
           {{-- Логотип ЧЗ --}}
           @elseif($type === 'czLogo')
-            @if(!empty($label->czLogo))
-              <div class="blk"
-                  style="left:{{$x}}mm;top:{{$y}}mm;width:{{$w}}mm;height:{{$h}}mm;">
-                <img src="data:image/png;base64,{{ $label->czLogo }}"
-                    style="max-width:100%;max-height:100%;object-fit:contain;" alt="ЧЗ">
-              </div>
-            @endif
+            <div class="blk" style="left:{{$x}}mm;top:{{$y}}mm;width:{{$w}}mm;height:{{$h}}mm;">
+              <img src="file://{{ public_path('images/cz-logo.jpg') }}" class="logo">
+            </div>
+
+          {{-- Логотип EAC --}}
+          @elseif($type === 'eacLogo')
+            <div class="blk" style="left:{{$x}}mm;top:{{$y}}mm;width:{{$w}}mm;height:{{$h}}mm;">
+              <img src="file://{{ public_path('images/eac-logo.jpg') }}" class="logo">
+            </div>
 
           {{-- Обычная картинка --}}
           @elseif($type === 'image')
@@ -150,8 +148,7 @@
             @if($src)
               <div class="blk"
                   style="left:{{$x}}mm;top:{{$y}}mm;width:{{$w}}mm;height:{{$h}}mm;">
-                <img src="{{ $src }}"
-                    style="width:100%;height:100%;object-fit:contain;" alt="">
+                <img src="{{ $src }}" class="logo">
               </div>
             @endif
           @endif

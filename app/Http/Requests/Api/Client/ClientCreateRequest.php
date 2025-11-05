@@ -34,6 +34,7 @@ class ClientCreateRequest extends FormRequest
     {
         return [
             'name' => 'required|string|unique:clients',
+            'short_name' => 'nullable|string|max:100',
             'type' => ['required', new Enum(ClientTypes::class)],
             'phone' => '',
             'email' => '',
@@ -45,6 +46,7 @@ class ClientCreateRequest extends FormRequest
             'correspondent_account' => '',
             'bic' => '',
             'legal_address' => '',
+            'short_address' => 'nullable|string|max:255',
             'vat' => ['nullable', 'numeric', 'between:0,100', 'regex:/^\d+(\.\d{1,2})?$/'],
             'details' => 'sometimes|array',
         ];

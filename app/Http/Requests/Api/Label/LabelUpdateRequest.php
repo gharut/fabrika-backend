@@ -36,13 +36,15 @@ class LabelUpdateRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'product_id' => ['sometimes','integer','exists:wb_products,id'],
             'client_id' => ['sometimes','nullable','exists:clients,id'],
-            'client_name' => ['sometimes', 'string', 'max:255'],
             'printer_id' => ['sometimes', 'nullable', 'integer', 'exists:printers,id'],
             'print_single_ean13' => ['sometimes', 'boolean'],
             'print_double_ean13' => ['sometimes', 'boolean'],
             'duplicate_chz' => ['sometimes', 'boolean'],
             'label_template_id' => ['sometimes', 'integer', 'exists:label_templates,id'],
             'size_display_type' => ['sometimes', 'string', Rule::in(array_column(SizeDisplayType::cases(), 'value'))],
+            'manufacture_date' => ['sometimes', 'nullable', 'date'],
+            'manufacturer' => ['sometimes', 'nullable', 'string', 'max:150'],
+            'country' => ['sometimes', 'nullable', 'string', 'max:100'],
         ];
     }
 

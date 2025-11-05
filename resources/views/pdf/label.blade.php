@@ -3,13 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <style>
-    @font-face {
-      font-family: 'DejaVu Sans';
-      font-style: normal;
-      font-weight: normal;
-      src: url("{{ base_path('vendor/tecnickcom/tcpdf/fonts/DejaVuSans.ttf') }}") format("truetype");
-    }
-
     @page { 
       size: 58mm 40mm; 
       margin: 0;
@@ -18,7 +11,6 @@
     body {
       margin: 0; 
       padding: 0;
-      font-family: 'DejaVu Sans', sans-serif;
       font-size: 9px;
     }
 

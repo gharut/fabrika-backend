@@ -22,6 +22,8 @@ use App\Http\Controllers\Api\MarketplaceCategoryController;
 use App\Http\Controllers\Api\SystemTextController;
 use App\Http\Controllers\Api\PricingStrategyController;
 use App\Http\Controllers\Api\StrategyItemController;
+use App\Http\Controllers\Api\LabelTemplateController;
+use App\Http\Controllers\Api\LabelDesignerController;
 
 use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\PermissionRegistrar;
@@ -87,9 +89,9 @@ Route::group([
         Route::put('/', [ProfileController::class, 'update']);
     });
 
-    Route::get('label-templates', [\App\Http\Controllers\Api\LabelTemplateController::class, 'index']);
-    Route::post('labels-pdf/print', [\App\Http\Controllers\Api\LabelDesignerController::class, 'print']);
-    Route::post('labels-pdf/preview', [\App\Http\Controllers\Api\LabelDesignerController::class, 'preview']);
+    Route::get('label-templates', [LabelTemplateController::class, 'index']);
+    Route::post('labels-pdf/print', [LabelDesignerController::class, 'print']);
+    Route::post('labels-pdf/preview', [LabelDesignerController::class, 'preview']);
 
     Route::prefix('pricing-strategies')->group(function () {
         Route::post('/', [PricingStrategyController::class, 'store']);
@@ -141,13 +143,13 @@ Route::group([
     });
 
     Route::prefix('clients')->group(function () {
-        Route::middleware('cper:create-clients')->post('/', [ClientController::class, 'store']);
+        // Route::middleware('cper:create-clients')->post('/', [ClientController::class, 'store']);
         Route::middleware('cper:view-clients')->get('ff', [ClientController::class, 'getFullfilmentOrg']);
         Route::middleware('cper:view-clients')->post('filters', [ClientController::class, 'getAllFiltered']);
         Route::middleware('cper:view-clients')->get('{client}', [ClientController::class, 'get']);
         Route::middleware('cper:edit-clients')->put('{client}', [ClientController::class, 'update']);
         Route::middleware('cper:view-clients')->get('/', [ClientController::class, 'list']);
-        Route::middleware('cper:delete-clients')->delete('{client}', [ClientController::class, 'destroy']);
+        // Route::middleware('cper:delete-clients')->delete('{client}', [ClientController::class, 'destroy']);
         Route::middleware('cper:set-fulfillment')->patch('{client}/set-fulfillment', [ClientController::class, 'setFulfillment']);
     });
 
@@ -186,7 +188,8 @@ Route::group([
         Route::middleware('cper:delete-client-users')->delete('{id}', [OrganizationParticipantController::class, 'destroy']);
     });
 
-    Route::prefix('marketplace-accounts')->group(function () {           
+    Route::prefix('marketplace-accounts')->group(function () {
+        Route::get('lookup', [MarketplaceAccountController::class, 'getMarketplacesList']);
         Route::middleware('cper:view-marketplace-accounts')->get('/', [MarketplaceAccountController::class, 'index']);
         Route::middleware('cper:check-connection')->post('check-connection/{id}', [MarketplaceAccountController::class, 'checkConnection']);
         Route::middleware('cper:view-marketplace-accounts')->get('{marketplaceAccount}', [MarketplaceAccountController::class, 'show']);

@@ -10,6 +10,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ConnectException;
 use App\Models\FileOperation;
 use App\Services\ChestnyZnakLabelService;
 use Exception;
@@ -34,7 +35,7 @@ class ProcessPdfImportJob implements ShouldQueue
     {   
         if ($this->clientId) {
             app(\App\Support\ClientContext::class)->set($this->clientId);
-            \Log::channel('jobs')->debug('ClientContext установлен', ['client_id' => $this->clientId]);
+            Log::channel('jobs')->debug('ClientContext установлен', ['client_id' => $this->clientId]);
         }
 
         $op = FileOperation::find($this->operationId);
@@ -156,6 +157,27 @@ class ProcessPdfImportJob implements ShouldQueue
                     'errors' => $errors,
                 ]);
             }
+            
+            if (Storage::exists($this->storagePath)) {
+                Storage::delete($this->storagePath);
+                Log::channel('jobs')->debug('Удалён временный файл', [
+                    'path' => $this->storagePath,
+                ]);
+            }
+        } 
+        catch (ConnectException $e) {
+            Log::channel('jobs')->error('ProcessPdfImportJob: сервис обработки PDF недоступен', [
+                'operation_id' => $this->operationId,
+                'message' => $e->getMessage(),
+            ]);
+
+            $op->update([
+                'status' => FileOperation::STATUS_FAILED,
+                'error_message' => 'Сервис расшифровки кодов временно недоступен. Попробуйте повторить операцию позже или обратитесь к администратору.',
+                'finished_at' => now(),
+            ]);
+
+            throw $e;
         } catch (Throwable $e) {
             Log::channel('jobs')->error('ProcessPdfImportJob FAILED', [
                 'operation_id' => $this->operationId,
@@ -172,13 +194,6 @@ class ProcessPdfImportJob implements ShouldQueue
             ]);
 
             throw $e;
-        } finally {
-            if (Storage::exists($this->storagePath)) {
-                Storage::delete($this->storagePath);
-                Log::channel('jobs')->debug('Удалён временный файл', [
-                    'path' => $this->storagePath,
-                ]);
-            }
         }
     }
 }

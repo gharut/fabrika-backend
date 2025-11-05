@@ -33,6 +33,8 @@ class Client extends Model
         'updated_by',
         'owner_id',
         'is_fulfillment',
+        'short_name',
+        'short_address',
     ];
 
     public function creator()

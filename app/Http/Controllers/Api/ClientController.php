@@ -139,8 +139,9 @@ class ClientController extends Controller
     {
         $client = new Client();
 
-        $client->fill($request->only(
+        $data = $request->only([
             'name',
+            'short_name',
             'type',
             'email',
             'phone',
@@ -153,9 +154,14 @@ class ClientController extends Controller
             'correspondent_account',
             'bic',
             'legal_address',
+            'short_address',
             'vat',
-        ));
+        ]);
+
+        $data['vat'] = $this->normalizeVat($data['vat'] ?? null);
+
         $userId = $request->user()->id;
+        $client->fill($data);
         $client->created_by = $userId;
         $client->updated_by = $userId;
 
@@ -167,25 +173,11 @@ class ClientController extends Controller
         ]);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function get(Client $client): JsonResponse
-    {
-        return response()->json([
-            'success' => true,
-            'data' => $client,
-        ]);
-    }
-
-
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Client $client): JsonResponse
     {
-        $client->fill($request->only('name',
+        $data = $request->only([
+            'name',
+            'short_name',
             'type',
             'email',
             'phone',
@@ -198,16 +190,30 @@ class ClientController extends Controller
             'correspondent_account',
             'bic',
             'legal_address',
+            'short_address',
             'vat',
-        ));
-        $userId = $request->user()->id;
-        $client->updated_by = $userId;
+        ]);
 
+        $data['vat'] = $this->normalizeVat($data['vat'] ?? null);
+
+        $client->fill($data);
+        $client->updated_by = $request->user()->id;
         $saved = $client->save();
 
         return response()->json([
             'success' => $saved,
             'data' => $client
+        ]);
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function get(Client $client): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => $client,
         ]);
     }
 
@@ -242,5 +248,20 @@ class ClientController extends Controller
             'success' => $client->delete(),
             'data' => null
         ]);
+    }
+
+    private function normalizeVat($vat): ?float
+    {
+        if ($vat === null) {
+            return null;
+        }
+
+        $vat = trim((string)$vat);
+
+        if ($vat === '' || strtolower($vat) === 'null') {
+            return null;
+        }
+
+        return is_numeric($vat) ? (float)$vat : null;
     }
 }

@@ -190,6 +190,12 @@ class ChestnyZnakLabelController extends Controller
                     case 'like':
                         $query->where($dbField, 'like', "%{$value}%");
                         break;
+                    case 'ge':
+                        $query->where($dbField, '>=', $value);
+                        break;
+                    case 'le':
+                        $query->where($dbField, '<=', $value);
+                        break;
                 }
             }
         }
@@ -229,7 +235,15 @@ class ChestnyZnakLabelController extends Controller
             case 'like':
                 $query->{$method}($field, 'like', "%{$value}%");
                 break;
-                
+
+            case 'ge':
+                $query->{$method}($field, '>=', $value);
+                break;
+
+            case 'le':
+                $query->{$method}($field, '<=', $value);
+                break;
+
             default:
                 throw new \InvalidArgumentException("Unsupported operation: {$operation}");
         }
@@ -372,23 +386,6 @@ class ChestnyZnakLabelController extends Controller
         $op = FileOperation::findOrFail($id);
 
         return response()->json($op);
-    }
-
-    public function downloadPdfLabels(Request $request)
-    {
-        $data = $request->validate([
-            'sizeId' => 'required|exists:product_sizes,id',
-            'labelId' => 'required|exists:labels,id',
-            'quantity' => 'required|integer|min:1'
-        ]);
-        
-        $options = new LabelPrintOptions(
-            sizeId: $data['sizeId'],
-            labelId: $data['labelId'],
-        );
-
-        // return $this->labelPdfService->generateFromHtml($options, $data['quantity']);
-        return $this->labelPdfService->generateFromDesignerSchema($options, $data['quantity']);
     }
 
     public function replaceSize(Request $request)

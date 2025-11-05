@@ -13,6 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('labels', function (Blueprint $table) {
+            // TO DO Удалить поле client_name
             $table->string('client_name')->nullable()->after('name');
             $table->foreignId('printer_id')
                 ->nullable()

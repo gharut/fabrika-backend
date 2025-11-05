@@ -33,6 +33,8 @@ class ClientUpdateRequest extends FormRequest
     {
         return [
             'name' => 'required|string|unique:suppliers,name,'.$this->supplier->id.',id',
+            'short_name' => 'nullable|string|max:100',
+            'short_address' => 'nullable|string|max:255',
             'address' => 'string',
             'website' => 'url',
 

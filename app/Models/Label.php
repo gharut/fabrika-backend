@@ -17,14 +17,16 @@ class Label extends Model
         'product_id',
         'label_template_id',
         'client_id',
-        'client_name',
         'printer_id',
         'created_by',
         'updated_by',
         'print_single_ean13',
         'print_double_ean13',
         'duplicate_chz',
-        'size_display_type'
+        'size_display_type',
+        'manufacture_date',
+        'manufacturer',
+        'country'
     ];
 
     protected $casts = [
@@ -35,7 +37,13 @@ class Label extends Model
         'print_double_ean13' => 'boolean',
         'duplicate_chz' => 'boolean',
         'size_display_type' => SizeDisplayType::class,
+        'manufacture_date' => 'date'
     ];
+
+    public function getClientNameAttribute()
+    {
+        return $this->client->short_name ?? $this->client->name ?? null;
+    }
 
     public function product()
     {
